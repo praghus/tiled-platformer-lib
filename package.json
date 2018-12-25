@@ -4,21 +4,23 @@
   "description": "Helper library for tmx based platformer games.",
   "main": "./lib/index.js",
   "scripts": {
-    "clean": "rimraf lib",
-    "build": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
-    "lint": "eslint src",
+    "clean": "rimraf dist",
+    "build": "cross-env BABEL_ENV=commonjs babel lib --out-dir dist",
+    "lint": "eslint lib",
     "prepublish": "npm run clean && npm run lint && npm run build"
   },
   "files": [
-    "lib",
-    "src"
+    "dist",
+    "lib"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/praghus/tmx-platformer-lib.git"
   },
   "keywords": [
-    "boilerplate",
+    "tmx",
+    "platformer",
+    "game",
     "npm",
     "module",
     "node",
