@@ -18,6 +18,10 @@ var Camera = function () {
         this.underground = false;
         this.magnitude = 2;
         this.shakeDirection = 1;
+        this.middlePoint = {
+            x: 0,
+            y: 0
+        };
         this.shake = this.shake.bind(this);
     }
 
@@ -28,6 +32,11 @@ var Camera = function () {
 
             this.follow = follow;
             center && this.center();
+        }
+    }, {
+        key: "setMiddlePoint",
+        value: function setMiddlePoint(x, y) {
+            this.middlePoint = { x: x, y: y };
         }
     }, {
         key: "update",
@@ -41,12 +50,12 @@ var Camera = function () {
                 surface = world.surface;
 
 
-            this.y = -(this.follow.y + this.follow.height / 2 - resolutionY / 2);
+            this.y = -(this.follow.y + this.follow.height / 2 - this.middlePoint.y);
 
-            if (this.follow.x + this.follow.width / 2 + this.x > resolutionX / 2) {
+            if (this.follow.x + this.follow.width / 2 + this.x > this.middlePoint.x) {
                 this.x -= this.follow.force.x > 0 ? this.follow.force.x : 0.5;
             }
-            if (this.follow.x + this.follow.width / 2 + this.x < resolutionX / 2) {
+            if (this.follow.x + this.follow.width / 2 + this.x < this.middlePoint.x) {
                 this.x -= this.follow.force.x < 0 ? this.follow.force.x : -0.5;
             }
             if (this.x - resolutionX < -world.width * spriteSize) {
