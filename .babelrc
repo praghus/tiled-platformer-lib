@@ -2,12 +2,10 @@
   "plugins": [
     "transform-class-properties",
     "syntax-decorators",
-    "transform-decorators-legacy"
+    "transform-decorators-legacy",
+    "add-module-exports"
   ],
-  "presets": [
-    ["es2015", { "modules": false }],
-    "stage-0"
-  ],
+  "presets": [["env"], "stage-0"],
   "env": {
     "targets": {
       "node": "current"
