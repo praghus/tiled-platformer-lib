@@ -2,7 +2,7 @@
   "name": "tmx-platformer-lib",
   "version": "1.0.2",
   "description": "Helper library for tmx based platformer games.",
-  "main": "./lib/dist.js",
+  "main": "./dist/index.js",
   "scripts": {
     "clean": "rimraf dist",
     "build": "cross-env BABEL_ENV=commonjs babel lib --out-dir dist",
