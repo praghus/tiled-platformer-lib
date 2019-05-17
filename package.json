@@ -1,6 +1,6 @@
 {
   "name": "tmx-platformer-lib",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Helper library for tmx based platformer games.",
   "main": "./lib/dist.js",
   "scripts": {
