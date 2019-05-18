@@ -5,8 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = undefined;
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _moment = require('moment');
@@ -19,52 +17,37 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Scene = function () {
-    function Scene(game) {
-        _classCallCheck(this, Scene);
+var Game = function () {
+    function Game(ctx, props) {
+        _classCallCheck(this, Game);
 
-        this.ctx = game.ctx;
-        this.assets = game.assets;
-        this.viewport = game.viewport;
-        this.ticker = game.ticker;
-        this.setScene = game.setScene;
-        this.playSound = game.playSound;
-        this.onKey = game.onKey;
+        this.ctx = ctx;
+        this.props = props;
+
         this.fps = 0;
-        this.input = null;
-        this.lastInput = null;
         this.delta = null;
         this.lastLoop = null;
         this.timer = null;
         this.frameTime = null;
+        this.timeoutsPool = {};
+
         this.frameStart = performance.now();
         this.then = performance.now();
+
         this.countFPS = this.countFPS.bind(this);
         this.countTime = this.countTime.bind(this);
-        this.fetchInput = this.fetchInput.bind(this);
         this.checkTimeout = this.checkTimeout.bind(this);
         this.startTimeout = this.startTimeout.bind(this);
         this.stopTimeout = this.stopTimeout.bind(this);
-        this.timeoutsPool = {};
+
         this.loaded = false;
     }
 
-    _createClass(Scene, [{
+    _createClass(Game, [{
         key: 'update',
         value: function update(nextProps) {
             if (this.loaded) {
-                var config = nextProps.config,
-                    assets = nextProps.assets,
-                    input = nextProps.input,
-                    ticker = nextProps.ticker,
-                    viewport = nextProps.viewport;
-
-                this.lastInput = _extends({}, this.input);
-                this.assets = assets;
-                this.config = config;
-                this.ticker = ticker;
-                this.viewport = viewport;
-                this.input = _extends({}, input.keyPressed);
+                this.props = nextProps;
                 this.frameStart = performance.now();
                 this.delta = this.frameStart - this.then;
 
@@ -72,7 +55,7 @@ var Scene = function () {
 
                 this.onUpdate();
 
-                if (this.delta > this.ticker.interval) {
+                if (this.delta > this.props.ticker.interval) {
                     this.tick();
                     this.countFPS();
                 }
@@ -89,11 +72,16 @@ var Scene = function () {
             // tick
         }
     }, {
+        key: 'render',
+        value: function render() {
+            // render
+        }
+    }, {
         key: 'draw',
         value: function draw() {
             if (this.loaded) {
                 var ctx = this.ctx,
-                    viewport = this.viewport;
+                    viewport = this.props.viewport;
                 var resolutionX = viewport.resolutionX,
                     resolutionY = viewport.resolutionY,
                     scale = viewport.scale;
@@ -108,16 +96,11 @@ var Scene = function () {
             }
         }
     }, {
-        key: 'render',
-        value: function render() {
-            // render
-        }
-    }, {
         key: 'countFPS',
         value: function countFPS() {
             var now = performance.now();
             var currentFrameTime = now - this.lastLoop;
-            this.then = this.frameStart - this.delta % this.ticker.interval;
+            this.then = this.frameStart - this.delta % this.props.ticker.interval;
             this.frameTime += (currentFrameTime - this.frameTime) / 100;
             this.fps = 1000 / this.frameTime;
             this.lastLoop = now;
@@ -128,11 +111,6 @@ var Scene = function () {
             var ms = (0, _moment2.default)().diff((0, _moment2.default)(this.timer));
             var d = _moment2.default.duration(ms);
             return d.asHours() >= 1 ? Math.floor(d.asHours()) + _moment2.default.utc(ms).format(':mm:ss') : _moment2.default.utc(ms).format('mm:ss');
-        }
-    }, {
-        key: 'fetchInput',
-        value: function fetchInput(action) {
-            return this.input[action] && !this.lastInput[action];
         }
     }, {
         key: 'checkTimeout',
@@ -163,8 +141,8 @@ var Scene = function () {
         }
     }]);
 
-    return Scene;
+    return Game;
 }();
 
-exports.default = Scene;
+exports.default = Game;
 module.exports = exports.default;

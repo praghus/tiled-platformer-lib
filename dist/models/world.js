@@ -22,7 +22,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var World = function () {
-    function World(data, config, scene) {
+    function World(data, config, game) {
         var _this = this;
 
         _classCallCheck(this, World);
@@ -39,7 +39,7 @@ var World = function () {
             oneWayTiles = config.oneWayTiles;
 
 
-        this._scene = scene;
+        this.game = game;
         this.layers = [];
         this.objectsPool = {};
         this.tiles = {};
@@ -137,12 +137,12 @@ var World = function () {
         key: 'renderTileLayer',
         value: function renderTileLayer(layerId) {
             var spriteSize = this.spriteSize;
-            var _scene = this._scene,
-                ctx = _scene.ctx,
-                camera = _scene.camera,
-                _scene$viewport = _scene.viewport,
-                resolutionX = _scene$viewport.resolutionX,
-                resolutionY = _scene$viewport.resolutionY;
+            var _game = this.game,
+                ctx = _game.ctx,
+                camera = _game.camera,
+                _game$props$viewport = _game.props.viewport,
+                resolutionX = _game$props$viewport.resolutionX,
+                resolutionY = _game$props$viewport.resolutionY;
 
 
             var y = Math.floor(camera.y % spriteSize);
@@ -213,7 +213,7 @@ var World = function () {
                         var Model = entity.model;
                         return new Model(_extends({
                             layerId: layerId
-                        }, obj, entity), this._scene);
+                        }, obj, entity), this.game);
                     }
                 }
                 return null;
@@ -224,7 +224,7 @@ var World = function () {
     }, {
         key: 'createTile',
         value: function createTile(tileId) {
-            var assets = this._scene.assets;
+            var assets = this.game.props.assets;
 
             var tileset = this.getTileset(tileId);
             if (!this.tiles[tileId] && tileId) {

@@ -14,20 +14,17 @@ var _helpers = require('../helpers');
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Entity = function () {
-    function Entity(obj, scene) {
+    function Entity(obj, game) {
         var _this = this;
 
         _classCallCheck(this, Entity);
 
-        this._scene = scene;
-        this.force = { x: 0, y: 0 };
+        this.game = game;
         this.bounds = null;
-        this.acceleration = 0;
+        this.speed = 0;
         this.maxSpeed = 1;
         this.activated = false;
         this.dead = false;
-        this.jump = false;
-        this.fall = false;
         this.onFloor = false;
         this.solid = false;
         this.vectorMask = null;
@@ -36,7 +33,10 @@ var Entity = function () {
         this.animCount = 0;
         this.states = {};
         this.state = null;
-
+        this.force = {
+            x: 0,
+            y: 0
+        };
         Object.keys(obj).map(function (prop) {
             _this[prop] = obj[prop];
         });
@@ -45,17 +45,16 @@ var Entity = function () {
     _createClass(Entity, [{
         key: 'onScreen',
         value: function onScreen() {
-            var _scene = this._scene,
-                world = _scene.world,
-                camera = _scene.camera,
-                viewport = _scene.viewport;
-            var resolutionX = viewport.resolutionX,
-                resolutionY = viewport.resolutionY;
+            var _game = this.game,
+                spriteSize = _game.world.spriteSize,
+                camera = _game.camera,
+                _game$props$viewport = _game.props.viewport,
+                resolutionX = _game$props$viewport.resolutionX,
+                resolutionY = _game$props$viewport.resolutionY;
             var x = this.x,
                 y = this.y,
                 width = this.width,
                 height = this.height;
-            var spriteSize = world.spriteSize;
 
             var bounds = this.getBounds();
 
@@ -90,10 +89,10 @@ var Entity = function () {
     }, {
         key: 'draw',
         value: function draw() {
-            var _scene2 = this._scene,
-                ctx = _scene2.ctx,
-                assets = _scene2.assets,
-                camera = _scene2.camera;
+            var _game2 = this.game,
+                ctx = _game2.ctx,
+                camera = _game2.camera,
+                assets = _game2.props.assets;
 
             if (this.onScreen()) {
                 var animation = this.animation,
@@ -158,7 +157,7 @@ var Entity = function () {
     }, {
         key: 'move',
         value: function move() {
-            var world = this._scene.world;
+            var world = this.game.world;
             var spriteSize = world.spriteSize;
 
 

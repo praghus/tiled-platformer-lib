@@ -9,10 +9,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Camera = function () {
-    function Camera(scene) {
+    function Camera(game) {
         _classCallCheck(this, Camera);
 
-        this._scene = scene;
+        this.game = game;
         this.x = 0;
         this.y = 0;
         this.underground = false;
@@ -41,13 +41,18 @@ var Camera = function () {
     }, {
         key: "update",
         value: function update() {
-            var _scene = this._scene,
-                world = _scene.world,
-                viewport = _scene.viewport;
-            var resolutionX = viewport.resolutionX,
-                resolutionY = viewport.resolutionY;
-            var spriteSize = world.spriteSize,
-                surface = world.surface;
+            if (!this.game.world || !this.follow) {
+                return;
+            }
+            var _game = this.game,
+                _game$world = _game.world,
+                width = _game$world.width,
+                height = _game$world.height,
+                spriteSize = _game$world.spriteSize,
+                surface = _game$world.surface,
+                _game$props$viewport = _game.props.viewport,
+                resolutionX = _game$props$viewport.resolutionX,
+                resolutionY = _game$props$viewport.resolutionY;
 
 
             this.y = -(this.follow.y + this.follow.height / 2 - this.middlePoint.y);
@@ -58,11 +63,11 @@ var Camera = function () {
             if (this.follow.x + this.follow.width / 2 + this.x < this.middlePoint.x) {
                 this.x -= this.follow.force.x < 0 ? this.follow.force.x : -0.5;
             }
-            if (this.x - resolutionX < -world.width * spriteSize) {
-                this.x = -world.width * spriteSize + resolutionX;
+            if (this.x - resolutionX < -width * spriteSize) {
+                this.x = -width * spriteSize + resolutionX;
             }
-            if (this.y - resolutionY < -world.height * spriteSize) {
-                this.y = -world.height * spriteSize + resolutionY;
+            if (this.y - resolutionY < -height * spriteSize) {
+                this.y = -height * spriteSize + resolutionY;
             }
             // above the surface
             if (Math.round((this.follow.y + this.follow.height / 2) / spriteSize) < surface) {
@@ -90,7 +95,7 @@ var Camera = function () {
     }, {
         key: "center",
         value: function center() {
-            var viewport = this._scene.viewport;
+            var viewport = this.game.props.viewport;
 
             if (viewport && this.follow) {
                 var resolutionX = viewport.resolutionX,

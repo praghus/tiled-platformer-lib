@@ -31,12 +31,12 @@ Object.defineProperty(exports, 'Entity', {
   }
 });
 
-var _scene = require('./models/scene');
+var _game = require('./models/game');
 
-Object.defineProperty(exports, 'Scene', {
+Object.defineProperty(exports, 'Game', {
   enumerable: true,
   get: function get() {
-    return _interopRequireDefault(_scene).default;
+    return _interopRequireDefault(_game).default;
   }
 });
 
