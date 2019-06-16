@@ -30,53 +30,52 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 var Tmx = exports.Tmx = function () {
-    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(xml) {
-        var tmx, _tmx$map, $, $$, map, expectedCount;
+    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(xmlString) {
+        var _ref2, _ref2$map, $, $$, map, expectedCount;
 
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
             while (1) {
                 switch (_context2.prev = _context2.next) {
                     case 0:
                         _context2.next = 2;
-                        return parseTmxFile(xml);
+                        return parseTmxFile(xmlString);
 
                     case 2:
-                        tmx = _context2.sent;
-                        _tmx$map = tmx.map, $ = _tmx$map.$, $$ = _tmx$map.$$;
-                        map = Object.assign.apply(Object, [{
-                            layers: {},
-                            tilesets: []
-                        }].concat(_toConsumableArray((0, _helpers.getValues)($))));
+                        _ref2 = _context2.sent;
+                        _ref2$map = _ref2.map;
+                        $ = _ref2$map.$;
+                        $$ = _ref2$map.$$;
+                        map = Object.assign.apply(Object, [{ layers: [], tilesets: [] }].concat(_toConsumableArray(getValues($))));
                         expectedCount = map.width * map.height * 4;
-                        _context2.next = 8;
+                        _context2.next = 10;
                         return Promise.all($$.map(function () {
-                            var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(node, i) {
+                            var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(node, i) {
                                 return regeneratorRuntime.wrap(function _callee$(_context) {
                                     while (1) {
                                         switch (_context.prev = _context.next) {
                                             case 0:
                                                 _context.t0 = node['#name'];
-                                                _context.next = _context.t0 === 'layer' ? 3 : _context.t0 === 'objectgroup' ? 7 : _context.t0 === 'properties' ? 9 : _context.t0 === 'tileset' ? 11 : 13;
+                                                _context.next = _context.t0 === _constants.NODE_TYPE.LAYER ? 3 : _context.t0 === _constants.NODE_TYPE.IMAGE_LAYER ? 7 : _context.t0 === _constants.NODE_TYPE.OBJECT_GROUP ? 7 : _context.t0 === _constants.NODE_TYPE.PROPERTIES ? 9 : _context.t0 === _constants.NODE_TYPE.TILESET ? 11 : 13;
                                                 break;
 
                                             case 3:
                                                 _context.next = 5;
-                                                return parseTileLayer(node, expectedCount);
+                                                return parseTileLayer(node, node['#name'], expectedCount);
 
                                             case 5:
                                                 map.layers[i] = _context.sent;
                                                 return _context.abrupt('break', 13);
 
                                             case 7:
-                                                map.layers[i] = parseObjectLayer(node);
+                                                map.layers[i] = parseLayerNode(node, node['#name']);
                                                 return _context.abrupt('break', 13);
 
                                             case 9:
-                                                map.properties = Object.assign.apply(Object, _toConsumableArray(node.$$.map(function (_ref3) {
-                                                    var _ref3$$ = _ref3.$,
-                                                        name = _ref3$$.name,
-                                                        value = _ref3$$.value;
-                                                    return _defineProperty({}, name, (0, _helpers.parseValue)(value));
+                                                map.properties = Object.assign.apply(Object, _toConsumableArray(node.$$.map(function (_ref4) {
+                                                    var _ref4$$ = _ref4.$,
+                                                        name = _ref4$$.name,
+                                                        value = _ref4$$.value;
+                                                    return _defineProperty({}, name, parseValue(value));
                                                 })));
                                                 return _context.abrupt('break', 13);
 
@@ -93,15 +92,15 @@ var Tmx = exports.Tmx = function () {
                             }));
 
                             return function (_x2, _x3) {
-                                return _ref2.apply(this, arguments);
+                                return _ref3.apply(this, arguments);
                             };
                         }()));
 
-                    case 8:
+                    case 10:
                         map.layers = Object.values(map.layers);
                         return _context2.abrupt('return', map);
 
-                    case 10:
+                    case 12:
                     case 'end':
                         return _context2.stop();
                 }
@@ -115,7 +114,7 @@ var Tmx = exports.Tmx = function () {
 }();
 
 var parseTmxFile = function () {
-    var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(tmx) {
+    var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(tmx) {
         var xml;
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
             while (1) {
@@ -145,9 +144,7 @@ var parseTmxFile = function () {
                                 explicitChildren: true,
                                 preserveChildrenOrder: true
                             }, function (err, tmx) {
-                                if (err) {
-                                    throw new Error(err);
-                                }
+                                if (err) throw new Error(err);
                                 resolve(tmx);
                             });
                         });
@@ -164,12 +161,12 @@ var parseTmxFile = function () {
     }));
 
     return function parseTmxFile(_x4) {
-        return _ref5.apply(this, arguments);
+        return _ref6.apply(this, arguments);
     };
 }();
 
 var parseDataUrl = function () {
-    var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(data) {
+    var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(data) {
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {
                 switch (_context4.prev = _context4.next) {
@@ -195,52 +192,93 @@ var parseDataUrl = function () {
     }));
 
     return function parseDataUrl(_x5) {
-        return _ref6.apply(this, arguments);
+        return _ref7.apply(this, arguments);
     };
 }();
 
-var getProperties = function getProperties(properties) {
-    return { properties: properties && Object.assign.apply(Object, _toConsumableArray(properties.map(function (_ref7) {
-            var property = _ref7.property;
-            return Object.assign.apply(Object, _toConsumableArray(property.map(function (_ref8) {
-                var _ref8$$ = _ref8.$,
-                    name = _ref8$$.name,
-                    value = _ref8$$.value,
-                    _ = _ref8._;
-                return _defineProperty({}, name, value ? (0, _helpers.parseValue)(value) : _);
-            })));
-        }))) || null };
-};
-
 var parseTileLayer = function () {
-    var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(layer, expectedCount) {
-        var $, data, properties, newLayer, zipped;
+    var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(layer, type, expectedCount) {
+        var $, data, properties, newLayer, _data$, _, _$, tile, encoding, compression, layerData, buffer, decompress;
+
         return regeneratorRuntime.wrap(function _callee5$(_context5) {
             while (1) {
                 switch (_context5.prev = _context5.next) {
                     case 0:
-                        // gzip, zlib
                         $ = layer.$, data = layer.data, properties = layer.properties;
                         newLayer = Object.assign.apply(Object, [_extends({
+                            type: type,
                             visible: 1,
-                            type: _constants.LAYER_TYPE.TILE_LAYER
-                        }, getProperties(properties))].concat(_toConsumableArray((0, _helpers.getValues)($))));
-                        // const { encoding, compression } = $$[0].$
+                            flips: []
+                        }, getProperties(properties))].concat(_toConsumableArray(getValues($))));
 
-                        zipped = new Buffer(data[0]._.trim(), 'base64');
-                        _context5.next = 5;
+                        if (!(0, _helpers.isValidArray)(data)) {
+                            _context5.next = 31;
+                            break;
+                        }
+
+                        _data$ = data[0], _ = _data$._, _$ = _data$.$, tile = _data$.tile;
+                        /* XML */
+
+                        if (!tile) {
+                            _context5.next = 8;
+                            break;
+                        }
+
+                        newLayer.data = tile.map(function (_ref9) {
+                            var $ = _ref9.$;
+                            return $ && $.gid || 0;
+                        });
+                        _context5.next = 29;
+                        break;
+
+                    case 8:
+                        encoding = _$.encoding, compression = _$.compression;
+                        layerData = _.trim();
+                        buffer = void 0;
+                        decompress = void 0;
+                        _context5.t0 = encoding;
+                        _context5.next = _context5.t0 === _constants.ENCODING.CSV ? 15 : _context5.t0 === _constants.ENCODING.BASE64 ? 17 : 29;
+                        break;
+
+                    case 15:
+                        newLayer.data = layerData.split(',');
+                        return _context5.abrupt('break', 29);
+
+                    case 17:
+                        buffer = new Buffer(layerData, encoding);
+                        _context5.t1 = compression;
+                        _context5.next = _context5.t1 === null ? 21 : _context5.t1 === undefined ? 21 : _context5.t1 === _constants.COMPRESSION.GZIP ? 23 : _context5.t1 === _constants.COMPRESSION.ZLIB ? 23 : 28;
+                        break;
+
+                    case 21:
+                        newLayer.data = unpackTileBytes(buffer, expectedCount);
+                        return _context5.abrupt('break', 29);
+
+                    case 23:
+                        decompress = compression === _constants.COMPRESSION.GZIP ? _zlib2.default.gunzip : _zlib2.default.inflate;
+                        _context5.next = 26;
                         return new Promise(function (resolve, reject) {
-                            return _zlib2.default.inflate(zipped, function (err, buf) {
+                            return decompress(buffer, function (err, buf) {
                                 if (err) reject(err);
                                 resolve(unpackTileBytes(buf, expectedCount));
                             });
                         });
 
-                    case 5:
+                    case 26:
                         newLayer.data = _context5.sent;
+                        return _context5.abrupt('break', 29);
+
+                    case 28:
+                        throw new Error('unsupported compression: ' + compression);
+
+                    case 29:
+                        newLayer.data.map(function (gid, i) {
+                            newLayer.flips[i] = getFlips(gid);
+                            newLayer.data[i] = getTileId(gid);
+                        });
                         return _context5.abrupt('return', newLayer);
 
-                    case 7:
+                    case 31:
                     case 'end':
                         return _context5.stop();
                 }
@@ -248,65 +286,121 @@ var parseTileLayer = function () {
         }, _callee5, undefined);
     }));
 
-    return function parseTileLayer(_x6, _x7) {
-        return _ref10.apply(this, arguments);
+    return function parseTileLayer(_x6, _x7, _x8) {
+        return _ref8.apply(this, arguments);
     };
 }();
 
-var parseObjectLayer = function parseObjectLayer(layer) {
+var parseLayerNode = function parseLayerNode(layer, type) {
     var $ = layer.$,
+        image = layer.image,
         object = layer.object,
         properties = layer.properties;
 
     return Object.assign.apply(Object, [_extends({
-        visible: 1,
-        type: _constants.LAYER_TYPE.OBJECT_LAYER,
-        objects: object.map(function (object) {
+        type: type,
+        visible: 1
+    }, (0, _helpers.isValidArray)(image) && { image: Object.assign.apply(Object, [{}].concat(_toConsumableArray(getValues(image[0].$)))) }, (0, _helpers.isValidArray)(object) && { objects: object.map(function (object) {
             return getObjectData(object);
-        })
-    }, getProperties(properties))].concat(_toConsumableArray((0, _helpers.getValues)($))));
+        }) }, getProperties(properties))].concat(_toConsumableArray(getValues($))));
+};
+
+var parseValue = function parseValue(value) {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    if (value.match(/^[+-]?\d+(\.\d+)?$/g)) {
+        var parsedValue = parseFloat(value);
+        return !isNaN(parsedValue) ? parsedValue : value;
+    }
+    return value;
+};
+
+var getValues = function getValues($) {
+    return $ && Object.entries($).map(function (_ref10) {
+        var _ref11 = _slicedToArray(_ref10, 2),
+            key = _ref11[0],
+            value = _ref11[1];
+
+        return _defineProperty({}, key, parseValue(value));
+    });
+};
+
+var getProperties = function getProperties(properties) {
+    return { properties: properties && Object.assign.apply(Object, _toConsumableArray(properties.map(function (_ref13) {
+            var property = _ref13.property;
+            return Object.assign.apply(Object, _toConsumableArray(property.map(function (_ref14) {
+                var _ref14$$ = _ref14.$,
+                    name = _ref14$$.name,
+                    value = _ref14$$.value,
+                    _ = _ref14._;
+                return _defineProperty({}, name, value ? parseValue(value) : _);
+            })));
+        }))) || null };
+};
+
+var getFlips = function getFlips(gid) {
+    return {
+        H: !!(gid & _constants.FLIPPED.HORIZONTALLY),
+        V: !!(gid & _constants.FLIPPED.VERTICALLY),
+        D: !!(gid & _constants.FLIPPED.DIAGONALLY)
+    };
+};
+
+var getTileId = function getTileId(gid) {
+    return gid &= ~(_constants.FLIPPED.HORIZONTALLY | _constants.FLIPPED.VERTICALLY | _constants.FLIPPED.DIAGONALLY);
+};
+
+var getObjectShape = function getObjectShape(data) {
+    return data.point && _constants.SHAPE.POINT || data.ellipse && _constants.SHAPE.ELLIPSE || data.polygon && _constants.SHAPE.POLYGON || _constants.SHAPE.RECTANGLE;
 };
 
 var getObjectData = function getObjectData(data) {
     var $ = data.$,
         properties = data.properties,
         polygon = data.polygon,
-        point = data.point,
-        ellipse = data.ellipse;
+        text = data.text;
 
-
-    var object = Object.assign.apply(Object, [_extends({}, getProperties(properties))].concat(_toConsumableArray((0, _helpers.getValues)($))));
-
-    if (point) {
-        object.shape = _constants.SHAPE.POINT;
-    } else if (ellipse) {
-        object.shape = _constants.SHAPE.ELLIPSE;
-    } else if (polygon) {
-        object.shape = _constants.SHAPE.POLYGON;
-        object.points = polygon[0].$.points.split(' ').map(function (point) {
+    var object = Object.assign.apply(Object, [_extends({
+        shape: getObjectShape(data)
+    }, (0, _helpers.isValidArray)(polygon) && {
+        points: polygon[0].$.points.split(' ').map(function (point) {
             var _point$split = point.split(','),
                 _point$split2 = _slicedToArray(_point$split, 2),
                 x = _point$split2[0],
                 y = _point$split2[1];
 
             return [parseFloat(x), parseFloat(y)];
-        });
-    } else {
-        object.shape = _constants.SHAPE.RECTANGLE;
+        }) }, getProperties(properties))].concat(_toConsumableArray(getValues($))));
+
+    if (text) {
+        object.text = text[0]._;
+        object.properties = Object.assign({}, object.properties, text[0].$);
+    }
+    if (object.gid) {
+        object.flips = getFlips(object.gid);
+        object.gid = getTileId(object.gid);
     }
     return object;
 };
 
-var getTilesData = function getTilesData(data) {
+var getTileData = function getTileData(data) {
     var $ = data.$,
-        animation = data.animation;
+        animation = data.animation,
+        objectgroup = data.objectgroup;
 
-    return Object.assign.apply(Object, [{
-        frames: animation.length && animation[0].frame.map(function (_ref11) {
-            var $ = _ref11.$;
-            return Object.assign.apply(Object, [{}].concat(_toConsumableArray((0, _helpers.getValues)($))));
+    var object = (0, _helpers.isValidArray)(objectgroup) && objectgroup[0].object;
+    return Object.assign.apply(Object, [_extends({}, (0, _helpers.isValidArray)(animation) && {
+        animation: {
+            frames: animation[0].frame.map(function (_ref16) {
+                var $ = _ref16.$;
+                return Object.assign.apply(Object, [{}].concat(_toConsumableArray(getValues($))));
+            })
+        }
+    }, (0, _helpers.isValidArray)(object) && {
+        objects: object.map(function (o) {
+            return getObjectData(o);
         })
-    }].concat(_toConsumableArray((0, _helpers.getValues)($))));
+    })].concat(_toConsumableArray(getValues($))));
 };
 
 var getTileset = function getTileset(data) {
@@ -314,11 +408,15 @@ var getTileset = function getTileset(data) {
         $$ = data.$$,
         tile = data.tile;
 
-    var image = $$ && Object.assign.apply(Object, [{}].concat(_toConsumableArray((0, _helpers.getValues)($$[0].$))));
-    var tiles = tile.length && tile.map(function (t) {
-        return getTilesData(t);
-    });
-    return Object.assign.apply(Object, _toConsumableArray((0, _helpers.getValues)($)).concat([{ image: image, tiles: tiles }]));
+    var image = $$ && Object.assign.apply(Object, [{}].concat(_toConsumableArray(getValues($$[0].$))));
+    if (image) {
+        var tiles = (0, _helpers.isValidArray)(tile) && tile.map(function (t) {
+            return getTileData(t);
+        });
+        return Object.assign.apply(Object, _toConsumableArray(getValues($)).concat([{ image: image, tiles: tiles }]));
+    } else {
+        throw new Error('Tilesets should be embeded in a map file.');
+    }
 };
 
 var unpackTileBytes = function unpackTileBytes(buf, expectedCount) {

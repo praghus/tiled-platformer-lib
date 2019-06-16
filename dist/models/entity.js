@@ -161,8 +161,6 @@ var Entity = function () {
             var spriteSize = world.spriteSize;
 
 
-            var reducedForceY = this.force.y < spriteSize && this.force.y || spriteSize;
-
             if (this.force.x > this.maxSpeed) this.force.x = this.maxSpeed;
             if (this.force.x < -this.maxSpeed) this.force.x = -this.maxSpeed;
 
@@ -184,7 +182,7 @@ var Entity = function () {
             var offsetY = this.y + boundsY;
 
             var nextX = _extends({ x: offsetX + this.force.x, y: offsetY }, boundsSize);
-            var nextY = _extends({ x: offsetX, y: offsetY + reducedForceY }, boundsSize);
+            var nextY = _extends({ x: offsetX, y: offsetY + this.force.y }, boundsSize);
 
             var PX = Math.floor((this.expectedX + boundsX) / spriteSize);
             var PY = Math.floor((this.expectedY + boundsY) / spriteSize);
@@ -225,7 +223,6 @@ var Entity = function () {
 
             this.onCeiling = this.expectedY < this.y;
             this.onFloor = this.expectedY > this.y;
-            // todo: remove this
             this.onLeftEdge = !world.isSolidArea(PX, PH);
             this.onRightEdge = !world.isSolidArea(PW, PH);
         }

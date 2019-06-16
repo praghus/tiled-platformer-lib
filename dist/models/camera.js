@@ -16,6 +16,7 @@ var Camera = function () {
         this.x = 0;
         this.y = 0;
         this.underground = false;
+        this.surface = null;
         this.magnitude = 2;
         this.shakeDirection = 1;
         this.middlePoint = {
@@ -39,6 +40,19 @@ var Camera = function () {
             this.middlePoint = { x: x, y: y };
         }
     }, {
+        key: "setSurfaceLevel",
+        value: function setSurfaceLevel(level) {
+            this.surface = level;
+        }
+    }, {
+        key: "getSurfaceLevel",
+        value: function getSurfaceLevel() {
+            if (this.game.world && !this.surface) {
+                return this.game.world.height;
+            }
+            return this.surface;
+        }
+    }, {
         key: "update",
         value: function update() {
             if (!this.game.world || !this.follow) {
@@ -49,11 +63,12 @@ var Camera = function () {
                 width = _game$world.width,
                 height = _game$world.height,
                 spriteSize = _game$world.spriteSize,
-                surface = _game$world.surface,
                 _game$props$viewport = _game.props.viewport,
                 resolutionX = _game$props$viewport.resolutionX,
                 resolutionY = _game$props$viewport.resolutionY;
 
+
+            var surface = this.getSurfaceLevel();
 
             this.y = -(this.follow.y + this.follow.height / 2 - this.middlePoint.y);
 

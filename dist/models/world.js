@@ -11,6 +11,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _constants = require('../constants');
 
+var _helpers = require('../helpers');
+
 var _tile = require('./tile');
 
 var _tile2 = _interopRequireDefault(_tile);
@@ -43,6 +45,7 @@ var World = function () {
         this.layers = [];
         this.objectsPool = {};
         this.tiles = {};
+        this.properties = properties;
 
         // config
         this.entities = entities || [];
@@ -53,7 +56,6 @@ var World = function () {
         // properties
         this.width = width;
         this.height = height;
-        this.surface = properties.surfaceLevel || this.height;
         this.spriteSize = tilewidth;
         this.tilesets = tilesets;
 
@@ -89,7 +91,6 @@ var World = function () {
             }
             _this.layers.push(layer);
         });
-        // console.info(this.tiles)
     }
 
     _createClass(World, [{
@@ -101,7 +102,6 @@ var World = function () {
                 layer.objects.map(function (obj, index) {
                     if (!obj.dead) {
                         if (_this2.isCollisionLayer(layer)) {
-                            // @todo: move collision detection into entity
                             for (var k = index + 1; k < layer.objects.length; k++) {
                                 obj.overlapTest(layer.objects[k]);
                             }
@@ -119,10 +119,10 @@ var World = function () {
             this.layers.map(function (layer) {
                 if (layer.visible) {
                     switch (layer.type) {
-                        case _constants.LAYER_TYPE.TILE_LAYER:
+                        case _constants.NODE_TYPE.LAYER:
                             _this3.renderTileLayer(layer.id);
                             break;
-                        case _constants.LAYER_TYPE.OBJECT_LAYER:
+                        case _constants.NODE_TYPE.OBJECT_GROUP:
                             layer.objects.map(function (obj) {
                                 return obj.draw();
                             });
@@ -184,6 +184,11 @@ var World = function () {
             this.getLayer(layerId).visible = false;
         }
     }, {
+        key: 'getProperty',
+        value: function getProperty(name) {
+            return this.properties && this.properties[name];
+        }
+    }, {
         key: 'getTileset',
         value: function getTileset(tile) {
             return this.tilesets.find(function (_ref2) {
@@ -228,8 +233,9 @@ var World = function () {
 
             var tileset = this.getTileset(tileId);
             if (!this.tiles[tileId] && tileId) {
+                var filename = (0, _helpers.getFilename)(tileset.image.source);
                 this.tiles[tileId] = new _tile2.default(tileId, {
-                    asset: assets[tileset.name],
+                    asset: assets[filename],
                     tileset: tileset
                 });
             }
@@ -366,7 +372,7 @@ var World = function () {
             var _this6 = this;
 
             return this.layers.filter(function (layer) {
-                return layer.type === 'tilelayer' && _this6.isCollisionLayer(layer);
+                return layer.type === 'layer' && _this6.isCollisionLayer(layer);
             }) || [];
         }
     }, {

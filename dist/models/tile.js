@@ -20,22 +20,37 @@ var Tile = function () {
         this.animCount = 0;
         this.properties = properties;
         this.animation = this.getAnimation();
+        this.terrain = this.getTerrain();
     }
 
     _createClass(Tile, [{
         key: 'getAnimation',
         value: function getAnimation() {
+            var props = this.getTileProperties();
+            return props && props.animation;
+        }
+    }, {
+        key: 'getTerrain',
+        value: function getTerrain() {
+            var props = this.getTileProperties();
+            return props && props.terrain && props.terrain.split(',').map(function (id) {
+                return id ? parseInt(id) : null;
+            });
+        }
+    }, {
+        key: 'getTileProperties',
+        value: function getTileProperties() {
             var id = this.id,
                 tiles = this.properties.tileset.tiles;
 
-            return tiles.length && tiles.find(function (tile) {
+            return (0, _helpers.isValidArray)(tiles) && tiles.filter(function (tile) {
                 return tile.id === id;
-            });
+            })[0];
         }
     }, {
         key: 'getSprite',
         value: function getSprite() {
-            if (this.animation) {
+            if (this.animation && this.animation.frames) {
                 var duration = 1000 / parseInt(this.animation.frames[this.animFrame].duration);
                 if (++this.animCount === Math.round(60 / duration)) {
                     if (this.animFrame <= this.animation.frames.length) {
