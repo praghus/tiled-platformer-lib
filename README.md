@@ -1,4 +1,4 @@
-# TMX Platformer library [![NPM version][npm-image]][npm-url]
+# TMX Platformer library
 
 Helper library for TMX based platformer games.
 
