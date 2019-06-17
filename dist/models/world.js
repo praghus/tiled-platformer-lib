@@ -207,7 +207,7 @@ var World = function () {
                 })[0] || null;
                 if (entity) {
                     // first check if there are some objects of the same type in objectsPool
-                    if (this.objectsPool[obj.type] && this.objectsPool[obj.type].length) {
+                    if ((0, _helpers.isValidArray)(this.objectsPool[obj.type])) {
                         var storedObj = this.objectsPool[obj.type].pop();
                         storedObj.restore();
                         Object.keys(obj).map(function (prop) {
@@ -232,13 +232,14 @@ var World = function () {
             var assets = this.game.props.assets;
 
             var tileset = this.getTileset(tileId);
-            if (!this.tiles[tileId] && tileId) {
+            if (!this.tiles[tileId] && tileset) {
                 var filename = (0, _helpers.getFilename)(tileset.image.source);
                 this.tiles[tileId] = new _tile2.default(tileId, {
                     asset: assets[filename],
                     tileset: tileset
                 });
             }
+            return this.tiles[tileId] || null;
         }
     }, {
         key: 'addObject',
@@ -297,7 +298,7 @@ var World = function () {
         key: 'getObjectLayers',
         value: function getObjectLayers() {
             return this.layers.filter(function (layer) {
-                return layer.objects && layer.objects.length > 0;
+                return (0, _helpers.isValidArray)(layer.objects);
             });
         }
     }, {

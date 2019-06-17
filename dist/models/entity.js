@@ -92,12 +92,14 @@ var Entity = function () {
             var _game2 = this.game,
                 ctx = _game2.ctx,
                 camera = _game2.camera,
+                world = _game2.world,
                 assets = _game2.props.assets;
 
             if (this.onScreen()) {
                 var animation = this.animation,
                     animations = this.animations,
                     animFrame = this.animFrame,
+                    gid = this.gid,
                     width = this.width,
                     height = this.height,
                     visible = this.visible;
@@ -110,6 +112,9 @@ var Entity = function () {
                 if (visible && sprite) {
                     if (animations) {
                         animation && ctx.drawImage(sprite, animation.x + animFrame * animation.w, animation.y, animation.w, animation.h, posX, posY, animation.w, animation.h);
+                    } else if (gid) {
+                        var tile = world.createTile(gid);
+                        tile.draw(Math.floor(this.x + camera.x), Math.floor(this.y + camera.y), ctx);
                     } else {
                         ctx.drawImage(sprite, 0, 0, width, height, posX, posY, width, height);
                     }
