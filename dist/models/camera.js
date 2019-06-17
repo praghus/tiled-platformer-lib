@@ -69,14 +69,15 @@ var Camera = function () {
 
 
             var surface = this.getSurfaceLevel();
+            var move = Math.round((this.follow.x + this.follow.width / 2 + this.x - this.middlePoint.x) / 16);
 
             this.y = -(this.follow.y + this.follow.height / 2 - this.middlePoint.y);
 
-            if (this.follow.x + this.follow.width / 2 + this.x > this.middlePoint.x) {
-                this.x -= this.follow.force.x > 0 ? this.follow.force.x : 0.5;
+            if (move !== 0) {
+                this.x -= move;
             }
-            if (this.follow.x + this.follow.width / 2 + this.x < this.middlePoint.x) {
-                this.x -= this.follow.force.x < 0 ? this.follow.force.x : -0.5;
+            if (this.follow.force.x !== 0) {
+                this.x -= this.follow.force.x;
             }
             if (this.x - resolutionX < -width * spriteSize) {
                 this.x = -width * spriteSize + resolutionX;
