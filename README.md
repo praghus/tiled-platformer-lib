@@ -1,6 +1,6 @@
-# TMX Platformer library
+# Tiled platformer library
 
-Helper library for TMX based platformer games.
+Helper library for tile based platformer games.
 
 ### License
 
