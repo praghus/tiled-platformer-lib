@@ -1,8 +1,8 @@
 {
-  "name": "tmx-platformer-lib",
+  "name": "tiled-platformer-lib",
   "version": "1.1.0",
-  "description": "Helper library for tmx based platformer games.",
-  "main": "./dist/index.js",
+  "description": "Helper library for tiled platformer games.",
+  "main": "./lib/index.js",
   "scripts": {
     "clean": "rimraf dist",
     "build": "cross-env BABEL_ENV=commonjs babel lib --out-dir dist",
@@ -16,10 +16,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/praghus/tmx-platformer-lib.git"
+    "url": "git+https://github.com/praghus/tiled-platformer-lib.git"
   },
   "keywords": [
     "tmx",
+    "tiled",
     "platformer",
     "game",
     "npm",
@@ -57,8 +58,6 @@
     "eslint-watch": "^3.1",
     "mocha": "^6.1.4",
     "moment": "^2.24.0",
-    "rimraf": "^2.6.2",
-    "xml2js": "^0.4.19",
-    "zlib": "^1.0.5"
+    "rimraf": "^2.6.2"
   }
 }
