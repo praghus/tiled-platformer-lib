@@ -1,11 +1,11 @@
 import { expect } from 'chai'
-import { Entity, Game, World } from '../lib'
+import { Entity, World } from '../lib'
 import { mapData } from './data/map-data'
-import CanvasMock from './mocks/canvas-mock'
+// import CanvasMock from './mocks/canvas-mock'
 import ImageMock from './mocks/image-mock'
 
-const canvas = new CanvasMock(640, 480)
-const ctx = canvas.getContext('2d')
+// const canvas = new CanvasMock(640, 480)
+// const ctx = canvas.getContext('2d')
 
 const worldConfig = {
     gravity: 0.5,
@@ -28,23 +28,9 @@ const gameProps = {
     }
 } 
 
-const gameInstance = new Game(ctx, gameProps)
-const gameWorld = new World(mapData, worldConfig, gameInstance) 
-const gamePlayer = gameWorld.getObjectByType('player', 2)
+const gameWorld = new World(mapData, worldConfig, {props: gameProps}) 
+// const gamePlayer = gameWorld.getObjectByType('player', 2)
 
-describe('Game', () => {
-    it('Game instance should contain canvas context', () => {        
-        expect(gameInstance.ctx).to.equal(ctx)
-    }) 
-
-    it('Game instance should contain camera object', () => {        
-        expect(gameInstance.camera.x).to.equal(0)
-        expect(gameInstance.camera.y).to.equal(0)
-        gameInstance.camera.setFollow(gamePlayer)
-        expect(gameInstance.camera.x).to.equal(280)
-        expect(gameInstance.camera.y).to.equal(112)
-    }) 
-})
 
 describe('World', () => {    
     it('World object should have its properties', () => {        
@@ -66,9 +52,9 @@ describe('World', () => {
         expect(gameWorld.tiles).to.have.keys([1, 2, 3, 4])
     })
 
-    it('World object should contain player object', () => {        
-        expect(gamePlayer.dead).to.be.false
-        expect(gamePlayer.x).to.equal(32)
-        expect(gamePlayer.y).to.equal(112)
-    }) 
+    // it('World object should contain player object', () => {        
+    //     expect(gamePlayer.dead).to.be.false
+    //     expect(gamePlayer.x).to.equal(32)
+    //     expect(gamePlayer.y).to.equal(112)
+    // }) 
 })

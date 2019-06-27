@@ -13,6 +13,7 @@ const player = {
     x: 32,
     y: 112
 }
+
 const enemy = {
     height: 16,
     id: 2,
