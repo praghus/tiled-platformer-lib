@@ -4,12 +4,12 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _vector = require('./vector');
+var _vec = require('./vec2');
 
-Object.defineProperty(exports, 'Vector', {
+Object.defineProperty(exports, 'Vec2', {
   enumerable: true,
   get: function get() {
-    return _interopRequireDefault(_vector).default;
+    return _interopRequireDefault(_vec).default;
   }
 });
 

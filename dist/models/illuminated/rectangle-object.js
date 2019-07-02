@@ -7,9 +7,9 @@ exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _vector = require('./vector');
+var _vec = require('./vec2');
 
-var _vector2 = _interopRequireDefault(_vector);
+var _vec2 = _interopRequireDefault(_vec);
 
 var _polygonObject = require('./polygon-object');
 
@@ -33,14 +33,14 @@ var RectangleObject = function (_PolygonObject) {
 
         var _this = _possibleConstructorReturn(this, (RectangleObject.__proto__ || Object.getPrototypeOf(RectangleObject)).call(this, options));
 
-        _this.topleft = options.topleft || new _vector2.default(), _this.bottomright = options.bottomright || new _vector2.default();
+        _this.topleft = options.topleft || new _vec2.default(), _this.bottomright = options.bottomright || new _vec2.default();
         return _this;
     }
 
     _createClass(RectangleObject, [{
         key: 'syncFromTopleftBottomright',
         value: function syncFromTopleftBottomright() {
-            this.points = [this.topleft, new _vector2.default(this.bottomright.x, this.topleft.y), this.bottomright, new _vector2.default(this.topleft.x, this.bottomright.y)];
+            this.points = [this.topleft, new _vec2.default(this.bottomright.x, this.topleft.y), this.bottomright, new _vec2.default(this.topleft.x, this.bottomright.y)];
         }
     }, {
         key: 'fill',

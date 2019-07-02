@@ -3,11 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.getRGBA = exports.hexToRgbA = exports.path = exports.createCanvasAnd2dContext = exports.getPerformance = exports.getEmptyImage = exports.normalize = exports.getFilename = exports.isValidArray = exports.overlap = exports.randomInt = exports.random = exports.noop = undefined;
-exports.createRectangleObject = createRectangleObject;
+exports.getRGBA = exports.path = exports.getPerformance = exports.getEmptyImage = exports.normalize = exports.getFilename = exports.isValidArray = exports.overlap = exports.randomInt = exports.random = exports.noop = undefined;
 exports.createPolygonObject = createPolygonObject;
+exports.createDiscObject = createDiscObject;
 exports.createLamp = createLamp;
-exports.setLightmaskElement = setLightmaskElement;
+exports.createCanvasAnd2dContext = createCanvasAnd2dContext;
 
 var _illuminated = require('./models/illuminated');
 
@@ -41,7 +41,6 @@ var getEmptyImage = exports.getEmptyImage = function getEmptyImage() {
     img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4wYSESAUu+6QoAAAAF9JREFUOMutk0kOwDAIA+0q//+yeyLqkiCoywlFjFlDQYJhIxyC7IAzcTidSm7MFayIvOKfUCayjF0BrbddxkprgjR25RJkgNmGDrjmtvD/EK01Wof09ZRLq8pE6H7nE1n2iZCrGoItAAAAAElFTkSuQmCC';
     return img;
 };
-
 var getPerformance = exports.getPerformance = function getPerformance() {
     return typeof performance !== 'undefined' && performance.now();
 };
@@ -50,17 +49,14 @@ var getPerformance = exports.getPerformance = function getPerformance() {
  * illuminated.js
  */
 
-function createRectangleObject(x, y, width, height) {
-    return new _illuminated.RectangleObject({
-        topleft: new _illuminated.Vector(x, y),
-        bottomright: new _illuminated.Vector(x + width, y + height)
-    });
-}
-
 function createPolygonObject(x, y, points) {
     return new _illuminated.PolygonObject({ points: points.map(function (v) {
-            return new _illuminated.Vector(v.x + x, v.y + y);
+            return new _illuminated.Vec2(v.x + x, v.y + y);
         }) });
+}
+
+function createDiscObject(x, y, radius) {
+    return new _illuminated.DiscObject({ center: new _illuminated.Vec2(x + radius, y + radius), radius: radius });
 }
 
 function createLamp(x, y, distance, color) {
@@ -71,31 +67,9 @@ function createLamp(x, y, distance, color) {
         distance: distance,
         radius: radius,
         samples: 1,
-        position: new _illuminated.Vector(x, y)
+        position: new _illuminated.Vec2(x, y)
     });
 }
-
-// @todo: make it better
-function setLightmaskElement(element, _ref) {
-    var x = _ref.x,
-        y = _ref.y,
-        width = _ref.width,
-        height = _ref.height;
-
-    if (element) {
-        element.topleft = Object.assign(element.topleft, { x: x, y: y });
-        element.bottomright = Object.assign(element.bottomright, { x: x + width, y: y + height });
-        element.syncFromTopleftBottomright();
-        return element;
-    }
-}
-
-var createCanvasAnd2dContext = exports.createCanvasAnd2dContext = function createCanvasAnd2dContext(w, h) {
-    var canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    return { canvas: canvas, ctx: canvas.getContext('2d'), w: w, h: h };
-};
 
 var path = exports.path = function path(ctx, points, dontJoinLast) {
     var p = points[0];
@@ -110,21 +84,38 @@ var path = exports.path = function path(ctx, points, dontJoinLast) {
     }
 };
 
-var hexToRgbA = exports.hexToRgbA = function hexToRgbA(hex) {
-    var alpha = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+function createCanvasAnd2dContext(id, w, h) {
+    var iid = 'illujs_' + id;
+    var canvas = document.getElementById(iid);
 
-    if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-        var c = void 0;
-        c = hex.substring(1).split('');
-        if (c.length === 3) {
-            c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-        }
-        c = '0x' + c.join('');
-        return 'rgba(' + [c >> 16 & 255, c >> 8 & 255, c & 255].join(',') + (',' + alpha + ')');
+    if (canvas === null) {
+        canvas = document.createElement('canvas');
+        canvas.id = iid;
+        canvas.width = w;
+        canvas.height = h;
+        canvas.style.display = 'none';
+        document.body.appendChild(canvas);
     }
-    throw new Error('Bad Hex');
-};
 
-var getRGBA = exports.getRGBA = function getRGBA(color, alpha) {
-    return color.match(/^#?([a-f\d]{3}|[a-f\d]{6})$/) ? hexToRgbA(color, alpha) : color.replace(/[d.]+\)$/g, alpha + ')');
-};
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    canvas.width = w;
+    canvas.height = h;
+
+    return { canvas: canvas, ctx: ctx, w: w, h: h };
+}
+
+var getRGBA = exports.getRGBA = function () {
+    var canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    var ctx = canvas.getContext('2d');
+
+    return function (color, alpha) {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, 1, 1);
+        var d = ctx.getImageData(0, 0, 1, 1).data;
+        return 'rgba(' + [d[0], d[1], d[2], alpha] + ')';
+    };
+}();

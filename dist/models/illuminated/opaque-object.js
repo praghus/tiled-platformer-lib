@@ -7,9 +7,9 @@ exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _vector = require('./vector');
+var _vec = require('./vec2');
 
-var _vector2 = _interopRequireDefault(_vector);
+var _vec2 = _interopRequireDefault(_vec);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28,8 +28,8 @@ var OpaqueObject = function () {
         key: 'bounds',
         value: function bounds() {
             return {
-                topleft: new _vector2.default(),
-                bottomright: new _vector2.default()
+                topleft: new _vec2.default(),
+                bottomright: new _vec2.default()
             };
         }
     }, {

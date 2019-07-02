@@ -7,11 +7,13 @@ exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _illuminated = require('./illuminated');
+
+var _constants = require('../constants');
+
 var _sat = require('sat');
 
 var _helpers = require('../helpers');
-
-var _constants = require('../constants');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -29,6 +31,7 @@ var Entity = function () {
         this.dead = false;
         this.onFloor = false;
         this.solid = false;
+        this.shadowCaster = false;
         this.vectorMask = null;
         this.animation = null;
         this.collisionLayers = null;
@@ -38,7 +41,7 @@ var Entity = function () {
         this.initialPosition = new _sat.Vector(obj.x, obj.y);
         this.frameStart = (0, _helpers.getPerformance)();
         this.then = (0, _helpers.getPerformance)();
-
+        this.setBoundingBox(0, 0, obj.width, obj.height);
         Object.keys(obj).map(function (prop) {
             _this[prop] = obj[prop];
         });
@@ -54,7 +57,7 @@ var Entity = function () {
     }, {
         key: 'setBoundingBox',
         value: function setBoundingBox(x, y, w, h) {
-            this.bounds = new _sat.Box(new _sat.Vector(x, y), w, h).toPolygon();
+            this.bounds = new _sat.Box(new _sat.Vector(x, y), w, h);
         }
     }, {
         key: 'setBoundingPolygon',
@@ -71,10 +74,11 @@ var Entity = function () {
 
             if (this.bounds) {
                 var _bounds = this.bounds,
-                    points = _bounds.points,
-                    pos = _bounds.pos;
+                    pos = _bounds.pos,
+                    w = _bounds.w,
+                    h = _bounds.h;
 
-                return new _sat.Polygon(new _sat.Vector(pos.x + x, pos.y + y), points);
+                return new _sat.Box(new _sat.Vector(pos.x + x, pos.y + y), w, h).toPolygon();
             }
             return new _sat.Box(new _sat.Vector(x, y), this.width, this.height).toPolygon();
         }
@@ -91,6 +95,7 @@ var Entity = function () {
                 y = this.y,
                 width = this.width,
                 height = this.height;
+
 
             return x + width + spriteSize > -camera.x && y + height + spriteSize > -camera.y && x - spriteSize < -camera.x + resolutionX && y - spriteSize < -camera.y + resolutionY;
         }
@@ -178,63 +183,105 @@ var Entity = function () {
             var _this2 = this;
 
             var world = this.game.world;
-            var spriteSize = world.spriteSize;
 
-            // consider some slowing down solution
 
+            if (!this.force.x && !this.force.y) return;
             if (this.force.x > this.maxSpeed) this.force.x = this.maxSpeed;
             if (this.force.x < -this.maxSpeed) this.force.x = -this.maxSpeed;
-            if (this.force.y > spriteSize / 2) this.force.y = spriteSize / 2;
+            //if (this.force.y > world.spriteSize / 2) this.force.y = world.spriteSize / 2
             if (this.x + this.force.x < 0) this.force.x = 0;
             if (this.y + this.force.y < 0) this.force.y = 0;
 
             this.expectedX = this.x + this.force.x;
             this.expectedY = this.y + this.force.y;
 
-            var PX = Math.floor(this.x / spriteSize);
-            var PY = Math.floor(this.y / spriteSize);
-            var PW = Math.floor((this.expectedX + this.width) / spriteSize);
-            var PH = Math.floor((this.expectedY + this.height) / spriteSize);
+            var PX = Math.floor(this.expectedX / world.spriteSize);
+            var PY = Math.floor(this.expectedY / world.spriteSize);
+            var PW = Math.floor((this.expectedX + this.width) / world.spriteSize);
+            var PH = Math.floor((this.expectedY + this.height) / world.spriteSize);
 
-            (0, _helpers.isValidArray)(this.collisionLayers) && this.collisionLayers.map(function (layer) {
-                for (var y = PY; y <= PH; y++) {
-                    for (var x = PX; x <= PW; x++) {
-                        var t = world.getTile(x, y, layer);
-                        if (world.isSolidTile(t)) {
-                            var td = world.tiles[t];
-                            var tileX = x * td.width;
-                            var tileY = y * td.height;
-                            var isOneWay = td.type === _constants.TILE_TYPE.ONE_WAY;
-                            var jumpThrough = !(isOneWay && _this2.force.y < 0 && !_this2.onFloor);
-                            var ccY = td.collide(_this2.getTranslatedBounds(_this2.x - tileX, _this2.expectedY - tileY));
-                            var ccX = td.collide(_this2.getTranslatedBounds(_this2.expectedX - tileX, _this2.y - tileY));
-                            if (ccX) {
-                                if (Math.abs(ccX.overlapV.y) && jumpThrough) {
-                                    _this2.force.y += ccX.overlapV.y;
-                                } else if (_this2.force.x !== 0 && !isOneWay) {
-                                    _this2.force.x += ccX.overlapV.x;
+            if ((0, _helpers.isValidArray)(this.collisionLayers)) {
+                this.collisionLayers.map(function (layer) {
+                    for (var y = PY; y <= PH; y++) {
+                        for (var x = PX; x <= PW; x++) {
+                            var t = world.getTile(x, y, layer);
+                            if (world.isSolidTile(t)) {
+                                var td = world.tiles[t];
+                                var tileX = x * td.width;
+                                var tileY = y * td.height;
+                                var isOneWay = td.type === _constants.TILE_TYPE.ONE_WAY;
+                                var jumpThrough = !(isOneWay && _this2.force.y < 0 && !_this2.onFloor);
+                                var ccY = td.collide(_this2.getTranslatedBounds(_this2.x - tileX, _this2.expectedY - tileY));
+                                var ccX = td.collide(_this2.getTranslatedBounds(_this2.expectedX - tileX, _this2.y - tileY));
+                                if (ccY && _this2.force.y !== 0 && jumpThrough) {
+                                    // fix overlaping when force.y is loo large
+                                    if (_this2.force.y > world.spriteSize / 2) {
+                                        _this2.force.y = world.spriteSize / 2;
+                                    }
+                                    _this2.force.y += ccY.overlapV.y;
                                 }
-                            }
-                            if (ccY && _this2.force.y !== 0 && jumpThrough) {
-                                _this2.force.y += ccY.overlapV.y;
+                                if (ccX) {
+                                    if (Math.abs(ccX.overlapV.y) && jumpThrough) {
+                                        _this2.force.y += ccX.overlapV.y;
+                                    } else if (_this2.force.x !== 0 && !isOneWay) {
+                                        _this2.force.x += ccX.overlapV.x;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
+
             this.x += this.force.x;
             this.y += this.force.y;
             this.onFloor = this.y < this.expectedY;
             this.onCeiling = this.y > this.expectedY;
-            this.onLeftEdge = !world.isSolidArea(PX, PH, this.collisionLayers);
-            this.onRightEdge = !world.isSolidArea(PW, PH, this.collisionLayers);
-
-            if (this.onFloor) this.force.y = 0;
+            // if (this.onFloor) this.force.y = 0
         }
     }, {
         key: 'kill',
         value: function kill() {
             this.dead = true;
+        }
+    }, {
+        key: 'getLight',
+        value: function getLight() {
+            var camera = this.game.camera;
+
+            this.light.position = new _illuminated.Vec2(this.x + this.width / 2 + camera.x, this.y + this.height / 2 + camera.y);
+            return this.light;
+        }
+    }, {
+        key: 'getLightMask',
+        value: function getLightMask() {
+            var _game3 = this.game,
+                camera = _game3.camera,
+                world = _game3.world;
+
+            var x = this.x + camera.x;
+            var y = this.y + camera.y;
+            var shadows = [];
+
+            if (this.shape === 'ellipse') {
+                shadows.push((0, _helpers.createDiscObject)(x, y, this.width / 2));
+            } else {
+                if (this.gid) {
+                    var tile = world.createTile(this.gid);
+                    tile.collisionLayer.map(function (_ref) {
+                        var points = _ref.points;
+
+                        shadows.push((0, _helpers.createPolygonObject)(x, y, points));
+                    });
+                }
+
+                var _getTranslatedBounds = this.getTranslatedBounds(x, this.expectedY),
+                    pos = _getTranslatedBounds.pos,
+                    points = _getTranslatedBounds.points;
+
+                shadows.push((0, _helpers.createPolygonObject)(pos.x, pos.y, points));
+            }
+            return shadows;
         }
     }, {
         key: 'restore',

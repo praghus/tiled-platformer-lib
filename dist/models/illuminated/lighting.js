@@ -30,8 +30,8 @@ var Lighting = function () {
     _createClass(Lighting, [{
         key: 'createCache',
         value: function createCache(w, h) {
-            this._cache = (0, _helpers.createCanvasAnd2dContext)(w, h);
-            this._castcache = (0, _helpers.createCanvasAnd2dContext)(w, h);
+            this._cache = (0, _helpers.createCanvasAnd2dContext)('lc', w, h);
+            this._castcache = (0, _helpers.createCanvasAnd2dContext)('lcc', w, h);
         }
     }, {
         key: 'cast',

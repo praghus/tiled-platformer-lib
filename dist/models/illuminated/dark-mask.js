@@ -17,7 +17,7 @@ var DarkMask = function () {
 
         _classCallCheck(this, DarkMask);
 
-        this.color = options.color || 'rgba(0,0,0,0.9)';
+        this.color = options.color || 'rgba(0,0,0,1)';
         this.lights = options.lights || [];
     }
 
@@ -25,7 +25,7 @@ var DarkMask = function () {
         key: 'compute',
         value: function compute(w, h) {
             if (!this._cache || this._cache.w !== w || this._cache.h !== h) {
-                this._cache = (0, _helpers.createCanvasAnd2dContext)(w, h);
+                this._cache = (0, _helpers.createCanvasAnd2dContext)('dm', w, h);
             }
             var ctx = this._cache.ctx;
             ctx.save();

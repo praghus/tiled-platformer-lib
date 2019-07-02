@@ -7,9 +7,9 @@ exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _vector = require('./vector');
+var _vec = require('./vec2');
 
-var _vector2 = _interopRequireDefault(_vector);
+var _vec2 = _interopRequireDefault(_vec);
 
 var _helpers = require('../../helpers');
 
@@ -23,7 +23,7 @@ var Light = function () {
 
         _classCallCheck(this, Light);
 
-        this.position = options.position || new _vector2.default(), this.distance = options.distance || 100, this.diffuse = options.diffuse || 0.8;
+        this.position = options.position || new _vec2.default(), this.distance = options.distance || 100, this.diffuse = options.diffuse || 0.8;
     }
 
     _createClass(Light, [{
@@ -36,14 +36,14 @@ var Light = function () {
         key: 'bounds',
         value: function bounds() {
             return {
-                topleft: new _vector2.default(this.position.x - this.distance, this.position.y - this.distance),
-                bottomright: new _vector2.default(this.position.x + this.distance, this.position.y + this.distance)
+                topleft: new _vec2.default(this.position.x - this.distance, this.position.y - this.distance),
+                bottomright: new _vec2.default(this.position.x + this.distance, this.position.y + this.distance)
             };
         }
     }, {
         key: 'center',
         value: function center() {
-            return new _vector2.default(this.distance, this.distance);
+            return new _vec2.default(this.distance, this.distance);
         }
     }, {
         key: 'forEachSample',
@@ -60,7 +60,7 @@ var Light = function () {
             var hash = '' + d;
             if (this.vismaskhash !== hash) {
                 this.vismaskhash = hash;
-                var c = this._vismaskcache = (0, _helpers.createCanvasAnd2dContext)(2 * d, 2 * d);
+                var c = this._vismaskcache = (0, _helpers.createCanvasAnd2dContext)('vm' + this.id, 2 * d, 2 * d);
                 var g = c.ctx.createRadialGradient(d, d, 0, d, d, d);
                 g.addColorStop(0, 'rgba(0,0,0,1)');
                 g.addColorStop(1, 'rgba(0,0,0,0)');

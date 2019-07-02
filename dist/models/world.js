@@ -54,11 +54,8 @@ var World = function () {
         this.dynamicLights = false;
 
         // dynamic lights and shadows
-        this.lighting = new _illuminated.Lighting();
-        this.darkmask = new _illuminated.DarkMask();
         this.lightmask = [];
         this.lights = [];
-        this.light = null;
         this.shadowCastingLayer = null;
 
         layers.map(function (_ref) {
@@ -102,22 +99,20 @@ var World = function () {
         value: function update() {
             var _this2 = this;
 
-            var camera = this.game.camera;
-
-            this.activeObjects = [];
-            this.darkmask.lights = [];
-            this.dynamicLights && this.clearLights();
+            this.clear();
             this.getObjectLayers().map(function (layer) {
                 layer.objects.map(function (obj) {
                     if (!obj.dead) {
                         if (obj.onScreen() || obj.activated) {
+                            var _lightmask;
+
                             _this2.activeObjects.map(function (activeObj) {
                                 return activeObj.overlapTest(obj);
                             });
-                            if (obj.light) {
-                                obj.light.position = new _illuminated.Vector(obj.x + obj.width / 2 + camera.x, obj.y + obj.height / 2 + camera.y);
-                                _this2.darkmask.lights.push(obj.light);
-                            }
+
+                            if (obj.light && obj.visible) _this2.lights.push(obj.getLight());
+                            if (obj.shadowCaster && obj.visible) (_lightmask = _this2.lightmask).push.apply(_lightmask, _toConsumableArray(obj.getLightMask()));
+
                             obj.update && obj.update();
                             _this2.activeObjects.push(obj);
                         }
@@ -165,8 +160,6 @@ var World = function () {
             var y = Math.floor(camera.y % this.spriteSize);
             var _y = Math.floor(-camera.y / this.spriteSize);
 
-            var shouldRenderLights = this.dynamicLights && layerId === this.shadowCastingLayer;
-
             var _loop = function _loop() {
                 var x = Math.floor(camera.x % _this4.spriteSize);
                 var _x = Math.floor(-camera.x / _this4.spriteSize);
@@ -174,7 +167,7 @@ var World = function () {
                     var tile = _this4.getTile(_x, _y, layerId);
                     if (tile > 0) {
                         // create shadow casters if necessary
-                        if (shouldRenderLights && _this4.isSolidTile(tile)) {
+                        if (layerId === _this4.shadowCastingLayer && _this4.isSolidTile(tile)) {
                             // experimental
                             _this4.tiles[tile].collisionLayer.map(function (_ref2) {
                                 var points = _ref2.points;
@@ -194,11 +187,13 @@ var World = function () {
             while (y < resolutionY) {
                 _loop();
             }
-            shouldRenderLights && this.renderLightingEffect();
         }
     }, {
         key: 'renderLightingEffect',
         value: function renderLightingEffect() {
+            var _this5 = this;
+
+            if (!this.dynamicLights) return;
             var _game2 = this.game,
                 ctx = _game2.ctx,
                 _game2$props$viewport = _game2.props.viewport,
@@ -206,17 +201,21 @@ var World = function () {
                 resolutionY = _game2$props$viewport.resolutionY;
 
 
-            this.lighting.light = this.light;
-            this.lighting.objects = this.lightmask;
-
-            this.lighting.compute(resolutionX, resolutionY);
-            this.darkmask.compute(resolutionX, resolutionY);
-
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
-            this.lighting.render(ctx);
+
+            this.lights.map(function (l) {
+                var lighting = new _illuminated.Lighting({ light: l, objects: _this5.lightmask });
+                lighting.compute(resolutionX, resolutionY);
+                lighting.render(ctx);
+            });
+
+            var darkmask = new _illuminated.DarkMask({ lights: this.lights });
+
             ctx.globalCompositeOperation = 'source-over';
-            this.darkmask.render(ctx);
+            darkmask.compute(resolutionX, resolutionY);
+            darkmask.render(ctx);
+
             ctx.restore();
         }
     }, {
@@ -225,23 +224,15 @@ var World = function () {
             this.dynamicLights = toggle;
         }
     }, {
-        key: 'setDynamicLights',
-        value: function setDynamicLights(layerId, lightSource) {
-            this.dynamicLights = true;
-            this.light = lightSource;
+        key: 'setShadowCastingLayer',
+        value: function setShadowCastingLayer(layerId, index) {
             this.shadowCastingLayer = layerId;
+            this.addLayer(this.renderLightingEffect.bind(this), index);
         }
     }, {
-        key: 'clearLights',
-        value: function clearLights() {
-            var _this5 = this;
-
-            this.lightmask.map(function (v, k) {
-                _this5.lightmask[k] = null;
-            });
-            this.lights.map(function (v, k) {
-                _this5.lights[k] = null;
-            });
+        key: 'clear',
+        value: function clear() {
+            this.activeObjects.splice(0, this.activeObjects.length);
             this.lightmask.splice(0, this.lightmask.length);
             this.lights.splice(0, this.lights.length);
         }
@@ -274,20 +265,8 @@ var World = function () {
                     return type === obj.type;
                 });
                 if (entity) {
-                    // first check if there are some objects of the same type in objectsPool
-                    // if (isValidArray(this.objectsPool[obj.type])) {
-                    //     console.info('Restored', obj.type)
-                    //     const storedObj = this.objectsPool[obj.type].pop()
-                    //     storedObj.restore()
-                    //     Object.keys(obj).map((prop) => {
-                    //         storedObj[prop] = obj[prop]
-                    //     })
-                    //     return storedObj
-                    // }
-                    // else {
                     var Entity = entity.model;
                     return new Entity(_extends({ layerId: layerId }, obj, entity), this.game);
-                    // }
                 }
                 return null;
             } catch (e) {
@@ -297,14 +276,7 @@ var World = function () {
     }, {
         key: 'removeObject',
         value: function removeObject(obj) {
-            //const { layerId, type } = obj
             var objectLayer = this.getObjects(obj.layerId);
-            // move deleted object to objectsPool
-            // to reduce garbage collection and stuttering
-            // if (!this.objectsPool[type]) {
-            //     this.objectsPool[type] = []
-            // }
-            // this.objectsPool[type].push(obj)
             objectLayer.splice(objectLayer.indexOf(obj), 1);
         }
     }, {

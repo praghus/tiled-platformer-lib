@@ -8,21 +8,22 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Vector = function () {
-    function Vector() {
+//extend sat.js vector
+var Vec2 = function () {
+    function Vec2() {
         var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
         var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
-        _classCallCheck(this, Vector);
+        _classCallCheck(this, Vec2);
 
         this.x = x;
         this.y = y;
     }
 
-    _createClass(Vector, [{
+    _createClass(Vec2, [{
         key: 'copy',
         value: function copy() {
-            return new Vector(this.x, this.y);
+            return new Vec2(this.x, this.y);
         }
     }, {
         key: 'dot',
@@ -32,17 +33,17 @@ var Vector = function () {
     }, {
         key: 'sub',
         value: function sub(v) {
-            return new Vector(this.x - v.x, this.y - v.y);
+            return new Vec2(this.x - v.x, this.y - v.y);
         }
     }, {
         key: 'add',
         value: function add(v) {
-            return new Vector(this.x + v.x, this.y + v.y);
+            return new Vec2(this.x + v.x, this.y + v.y);
         }
     }, {
         key: 'mul',
         value: function mul(n) {
-            return new Vector(this.x * n, this.y * n);
+            return new Vec2(this.x * n, this.y * n);
         }
     }, {
         key: 'inv',
@@ -60,7 +61,7 @@ var Vector = function () {
         key: 'normalize',
         value: function normalize() {
             var length = Math.sqrt(this.length2());
-            return new Vector(this.x / length, this.y / length);
+            return new Vec2(this.x / length, this.y / length);
         }
     }, {
         key: 'length2',
@@ -79,8 +80,8 @@ var Vector = function () {
         }
     }]);
 
-    return Vector;
+    return Vec2;
 }();
 
-exports.default = Vector;
+exports.default = Vec2;
 module.exports = exports.default;

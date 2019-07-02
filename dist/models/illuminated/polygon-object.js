@@ -7,9 +7,9 @@ exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _vector = require('./vector');
+var _vec = require('./vec2');
 
-var _vector2 = _interopRequireDefault(_vector);
+var _vec2 = _interopRequireDefault(_vec);
 
 var _opaqueObject = require('./opaque-object');
 
@@ -50,7 +50,7 @@ var PolygonObject = function (_OpaqueObject) {
                     var originToA = a.sub(origin);
                     var originToB = b.sub(origin);
                     var aToB = b.sub(a);
-                    var normal = new _vector2.default(aToB.y, -aToB.x);
+                    var normal = new _vec2.default(aToB.y, -aToB.x);
                     if (normal.dot(originToA) < 0) {
                         f(a, b, originToA, originToB, aToB);
                     }

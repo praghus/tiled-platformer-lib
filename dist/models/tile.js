@@ -36,13 +36,11 @@ var Tile = function () {
     _createClass(Tile, [{
         key: 'collide',
         value: function collide(polygon) {
-            if ((0, _helpers.isValidArray)(this.collisionLayer)) {
-                var response = new _sat.Response();
-                var hasCollision = this.collisionLayer.some(function (shape) {
-                    return (0, _sat.testPolygonPolygon)(shape, polygon, response);
-                });
-                return hasCollision && response;
-            }
+            var response = new _sat.Response();
+            var hasCollision = this.collisionLayer.some(function (shape) {
+                return (0, _sat.testPolygonPolygon)(shape, polygon, response);
+            });
+            return hasCollision && response;
         }
     }, {
         key: 'createCollisionLayer',
