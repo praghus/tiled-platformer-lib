@@ -157,11 +157,11 @@ var World = function () {
                 resolutionY = _game$props$viewport.resolutionY;
 
 
-            var y = Math.floor(camera.y % this.spriteSize);
+            var y = camera.y % this.spriteSize;
             var _y = Math.floor(-camera.y / this.spriteSize);
 
             var _loop = function _loop() {
-                var x = Math.floor(camera.x % _this4.spriteSize);
+                var x = camera.x % _this4.spriteSize;
                 var _x = Math.floor(-camera.x / _this4.spriteSize);
                 while (x < resolutionX) {
                     var tile = _this4.getTile(_x, _y, layerId);

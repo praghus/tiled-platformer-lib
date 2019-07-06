@@ -150,7 +150,8 @@ var Entity = function () {
 
                     var x = strip ? strip.x + animFrame * animation.width : (0, _helpers.isValidArray)(frames) && frames[animFrame][0];
                     var y = strip ? strip.y : (0, _helpers.isValidArray)(frames) && frames[animFrame][1];
-                    animation && ctx.drawImage(sprite, x, y, animation.width, animation.height, posX, posY, animation.width, animation.height);
+
+                    ctx.drawImage(sprite, x, y, animation.width, animation.height, posX, posY, animation.width, animation.height);
                 } else if (gid) {
                     world.createTile(gid).draw(ctx, posX, posY);
                 } else if (sprite) {
