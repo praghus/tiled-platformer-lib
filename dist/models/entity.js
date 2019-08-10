@@ -72,15 +72,7 @@ var Entity = function () {
             var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.x;
             var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.y;
 
-            if (this.bounds) {
-                var _bounds = this.bounds,
-                    pos = _bounds.pos,
-                    w = _bounds.w,
-                    h = _bounds.h;
-
-                return new _sat.Box(new _sat.Vector(pos.x + x, pos.y + y), w, h).toPolygon();
-            }
-            return new _sat.Box(new _sat.Vector(x, y), this.width, this.height).toPolygon();
+            return this.bounds && this.bounds.toPolygon().translate(x, y);
         }
     }, {
         key: 'onScreen',
@@ -141,8 +133,9 @@ var Entity = function () {
                     height = this.height;
 
                 var sprite = assets[this.asset];
-                var posX = this.x + camera.x,
-                    posY = this.y + camera.y;
+                var _ref = [Math.floor(this.x + camera.x), Math.floor(this.y + camera.y)],
+                    posX = _ref[0],
+                    posY = _ref[1];
 
                 if (animation) {
                     var frames = animation.frames,
@@ -153,7 +146,7 @@ var Entity = function () {
 
                     ctx.drawImage(sprite, x, y, animation.width, animation.height, posX, posY, animation.width, animation.height);
                 } else if (gid) {
-                    world.createTile(gid).draw(ctx, posX, posY);
+                    world.createTile(gid).draw(posX, posY);
                 } else if (sprite) {
                     ctx.drawImage(sprite, 0, 0, width, height, posX, posY, width, height);
                 }
@@ -196,10 +189,10 @@ var Entity = function () {
             this.expectedX = this.x + this.force.x;
             this.expectedY = this.y + this.force.y;
 
-            var PX = Math.floor(this.expectedX / world.spriteSize);
-            var PY = Math.floor(this.expectedY / world.spriteSize);
-            var PW = Math.floor((this.expectedX + this.width) / world.spriteSize);
-            var PH = Math.floor((this.expectedY + this.height) / world.spriteSize);
+            var PX = Math.round(this.expectedX / world.spriteSize);
+            var PY = Math.round(this.expectedY / world.spriteSize);
+            var PW = Math.round((this.expectedX + this.width) / world.spriteSize);
+            var PH = Math.round((this.expectedY + this.height) / world.spriteSize);
 
             if ((0, _helpers.isValidArray)(this.collisionLayers)) {
                 this.collisionLayers.map(function (layer) {
@@ -212,20 +205,20 @@ var Entity = function () {
                                 var tileY = y * td.height;
                                 var isOneWay = td.type === _constants.TILE_TYPE.ONE_WAY;
                                 var jumpThrough = !(isOneWay && _this2.force.y < 0 && !_this2.onFloor);
-                                var ccY = td.collide(_this2.getTranslatedBounds(_this2.x - tileX, _this2.expectedY - tileY));
-                                var ccX = td.collide(_this2.getTranslatedBounds(_this2.expectedX - tileX, _this2.y - tileY));
-                                if (ccY && _this2.force.y !== 0 && jumpThrough) {
-                                    // fix overlaping when force.y is loo large
+                                var overlapY = td.collide(_this2.getTranslatedBounds(_this2.x - tileX, _this2.expectedY - tileY));
+                                var overlapX = td.collide(_this2.getTranslatedBounds(_this2.expectedX - tileX, _this2.y - tileY));
+                                if (overlapY && _this2.force.y !== 0 && jumpThrough) {
+                                    // fix overlaping when force.y is too high
                                     if (_this2.force.y > world.spriteSize / 2) {
                                         _this2.force.y = world.spriteSize / 2;
                                     }
-                                    _this2.force.y += ccY.overlapV.y;
+                                    _this2.force.y += overlapY.y;
                                 }
-                                if (ccX) {
-                                    if (Math.abs(ccX.overlapV.y) && jumpThrough) {
-                                        _this2.force.y += ccX.overlapV.y;
+                                if (overlapX) {
+                                    if (Math.abs(overlapX.y) && jumpThrough) {
+                                        _this2.force.y += overlapX.y;
                                     } else if (_this2.force.x !== 0 && !isOneWay) {
-                                        _this2.force.x += ccX.overlapV.x;
+                                        _this2.force.x += overlapX.x;
                                     }
                                 }
                             }
@@ -269,8 +262,8 @@ var Entity = function () {
             } else {
                 if (this.gid) {
                     var tile = world.createTile(this.gid);
-                    tile.collisionLayer.map(function (_ref) {
-                        var points = _ref.points;
+                    tile.collisionLayer.map(function (_ref2) {
+                        var points = _ref2.points;
 
                         shadows.push((0, _helpers.createPolygonObject)(x, y, points));
                     });

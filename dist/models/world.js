@@ -149,19 +149,17 @@ var World = function () {
             var _this4 = this;
 
             var _game = this.game,
-                ctx = _game.ctx,
                 camera = _game.camera,
-                debug = _game.debug,
                 _game$props$viewport = _game.props.viewport,
                 resolutionX = _game$props$viewport.resolutionX,
                 resolutionY = _game$props$viewport.resolutionY;
 
 
-            var y = camera.y % this.spriteSize;
+            var y = Math.floor(camera.y % this.spriteSize);
             var _y = Math.floor(-camera.y / this.spriteSize);
 
             var _loop = function _loop() {
-                var x = camera.x % _this4.spriteSize;
+                var x = Math.floor(camera.x % _this4.spriteSize);
                 var _x = Math.floor(-camera.x / _this4.spriteSize);
                 while (x < resolutionX) {
                     var tile = _this4.getTile(_x, _y, layerId);
@@ -175,7 +173,7 @@ var World = function () {
                                 _this4.lightmask.push((0, _helpers.createPolygonObject)(x, y, points));
                             });
                         }
-                        _this4.tiles[tile].draw(ctx, x, y, { debug: debug });
+                        _this4.tiles[tile].draw(x, y);
                     }
                     x += _this4.spriteSize;
                     _x++;
@@ -232,9 +230,12 @@ var World = function () {
     }, {
         key: 'clear',
         value: function clear() {
-            this.activeObjects.splice(0, this.activeObjects.length);
-            this.lightmask.splice(0, this.lightmask.length);
-            this.lights.splice(0, this.lights.length);
+            delete this.activeObjects;
+            delete this.lightmask;
+            delete this.lights;
+            this.activeObjects = [];
+            this.lightmask = [];
+            this.lights = [];
         }
     }, {
         key: 'addLayer',
@@ -287,7 +288,7 @@ var World = function () {
             var tileset = this.getTileset(tileId);
             if (!this.tiles[tileId] && tileset) {
                 var filename = (0, _helpers.getFilename)(tileset.image.source);
-                this.tiles[tileId] = new _tile2.default(tileId, assets[filename], tileset);
+                this.tiles[tileId] = new _tile2.default(tileId, assets[filename], tileset, this.game);
             }
             return this.tiles[tileId] || null;
         }
@@ -361,6 +362,7 @@ var World = function () {
         key: 'putTile',
         value: function putTile(x, y, value, layerId) {
             if (!this.isInRange(x, y)) return false;
+            this.createTile(value);
             this.getLayer(layerId).data[x][y] = value;
         }
     }, {

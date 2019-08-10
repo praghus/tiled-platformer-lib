@@ -2,7 +2,7 @@
   "name": "tiled-platformer-lib",
   "version": "1.5.0",
   "description": "Helper library for tiled platformer games.",
-  "main": "./dist/index.js",
+  "main": "./lib/index.js",
   "scripts": {
     "clean": "rimraf dist",
     "build": "cross-env BABEL_ENV=commonjs babel lib --out-dir dist",

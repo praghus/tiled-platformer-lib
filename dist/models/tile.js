@@ -14,11 +14,11 @@ var _helpers = require('../helpers');
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Tile = function () {
-    function Tile(id, asset, tileset) {
+    function Tile(id, asset, tileset, game) {
         _classCallCheck(this, Tile);
 
-        // this.game = game
         this.id = id;
+        this.game = game;
         this.animFrame = 0;
         this.asset = asset;
         this.tileset = tileset;
@@ -40,7 +40,7 @@ var Tile = function () {
             var hasCollision = this.collisionLayer.some(function (shape) {
                 return (0, _sat.testPolygonPolygon)(shape, polygon, response);
             });
-            return hasCollision && response;
+            return hasCollision && response.overlapV;
         }
     }, {
         key: 'createCollisionLayer',
@@ -68,7 +68,7 @@ var Tile = function () {
                         break;
                 }
             }) || collisionLayer.push(new _sat.Box(new _sat.Vector(0, 0), this.width, this.height).toPolygon());
-            return (0, _helpers.isValidArray)(collisionLayer) && collisionLayer || null;
+            return collisionLayer;
         }
     }, {
         key: 'getTerrain',
@@ -110,24 +110,27 @@ var Tile = function () {
         }
     }, {
         key: 'draw',
-        value: function draw(ctx, x, y) {
+        value: function draw(x, y) {
             var _this = this;
 
-            var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+            var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
             var asset = this.asset,
+                _game = this.game,
+                ctx = _game.ctx,
+                debug = _game.debug,
                 _tileset2 = this.tileset,
                 columns = _tileset2.columns,
                 firstgid = _tileset2.firstgid,
                 tilewidth = _tileset2.tilewidth,
                 tileheight = _tileset2.tileheight;
 
+
             var scale = options.scale || 1;
-            var debug = !!options.debug;
             var sprite = this.getSprite();
 
             ctx.drawImage(asset, (sprite - firstgid) % columns * tilewidth, (Math.ceil((sprite - firstgid + 1) / columns) - 1) * tileheight, tilewidth, tileheight, x, y, tilewidth * scale, tileheight * scale);
 
-            (0, _helpers.isValidArray)(this.collisionLayer) && debug && this.collisionLayer.map(function (object) {
+            debug && (0, _helpers.isValidArray)(this.collisionLayer) && this.collisionLayer.map(function (object) {
                 var posX = object.pos.x + x,
                     posY = object.pos.y + y;
 
