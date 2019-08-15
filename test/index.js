@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { Entity, World } from '../lib'
+import { Entity, Scene } from '../lib'
 import { mapData } from './data/map-data'
 // import CanvasMock from './mocks/canvas-mock'
 import ImageMock from './mocks/image-mock'
@@ -7,7 +7,7 @@ import ImageMock from './mocks/image-mock'
 // const canvas = new CanvasMock(640, 480)
 // const ctx = canvas.getContext('2d')
 
-const worldConfig = {
+const sceneConfig = {
     gravity: 0.5,
     entities: [
         { type: 'player', model: Entity, asset: 'player.png' },
@@ -28,31 +28,31 @@ const gameProps = {
     }
 } 
 
-const gameWorld = new World(mapData, worldConfig, {props: gameProps}) 
-// const gamePlayer = gameWorld.getObjectByType('player', 2)
+const gameScene = new Scene(mapData, sceneConfig, {props: gameProps}) 
+// const gamePlayer = gameScene.getObjectByType('player', 2)
 
 
-describe('World', () => {    
-    it('World object should have its properties', () => {        
-        expect(gameWorld.properties).to.include({
+describe('Scene', () => {    
+    it('Scene object should have its properties', () => {        
+        expect(gameScene.properties).to.include({
             'gravity': 0.5,
             'surfaceLevel': 64
         })
     })
 
-    it('World object should contain all layers', () => {        
-        expect(gameWorld.layers).to.have.length(2)
+    it('Scene object should contain all layers', () => {        
+        expect(gameScene.layers).to.have.length(2)
     })
 
-    it('World object should contain all tilesets', () => {        
-        expect(gameWorld.tilesets).to.have.length(1)
+    it('Scene object should contain all tilesets', () => {        
+        expect(gameScene.tilesets).to.have.length(1)
     })
 
-    it('World object should contain all tiles', () => {        
-        expect(gameWorld.tiles).to.have.keys([1, 2, 3, 4])
+    it('Scene object should contain all tiles', () => {        
+        expect(gameScene.tiles).to.have.keys([1, 2, 3, 4])
     })
 
-    // it('World object should contain player object', () => {        
+    // it('Scene object should contain player object', () => {        
     //     expect(gamePlayer.dead).to.be.false
     //     expect(gamePlayer.x).to.equal(32)
     //     expect(gamePlayer.y).to.equal(112)
