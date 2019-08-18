@@ -93,9 +93,23 @@ var Scene = function () {
     }, {
         key: 'draw',
         value: function draw() {
+            var ctx = this.game.ctx,
+                resolutionX = this.resolutionX,
+                resolutionY = this.resolutionY,
+                scale = this.scale;
+
+
+            ctx.imageSmoothingEnabled = false;
+
+            ctx.save();
+            ctx.scale(scale, scale);
+            ctx.clearRect(0, 0, resolutionX, resolutionY);
+
             this.layers.map(function (layer) {
                 return layer instanceof _layer2.default && layer.draw();
             });
+
+            ctx.restore();
         }
     }, {
         key: 'createSprite',

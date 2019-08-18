@@ -14,5 +14,6 @@ var NODE_TYPE = exports.NODE_TYPE = {
 
 var TILE_TYPE = exports.TILE_TYPE = {
     NON_COLLIDING: 'no_collide',
-    ONE_WAY: 'one_way'
+    ONE_WAY: 'one_way',
+    INVISIBLE: 'invisible'
 };

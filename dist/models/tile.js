@@ -67,6 +67,11 @@ var Tile = function () {
             return this.type === _constants.TILE_TYPE.ONE_WAY;
         }
     }, {
+        key: 'isInvisible',
+        value: function isInvisible() {
+            return this.type === _constants.TILE_TYPE.INVISIBLE;
+        }
+    }, {
         key: 'isShadowCaster',
         value: function isShadowCaster() {
             return this.isSolid() && !this.isOneWay();
@@ -83,6 +88,8 @@ var Tile = function () {
     }, {
         key: 'draw',
         value: function draw() {
+            if (this.isInvisible()) return;
+
             var _game = this.game,
                 camera = _game.camera,
                 scene = _game.scene;
