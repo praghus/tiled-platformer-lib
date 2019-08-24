@@ -30,6 +30,7 @@ var Entity = function () {
         _classCallCheck(this, Entity);
 
         this.activated = false;
+        this.bounds = null;
         this.collisionMask = null;
         this.collisionLayers = null;
         this.dead = false;
@@ -42,6 +43,8 @@ var Entity = function () {
         this.solid = false;
         this.speed = 0;
         this.states = null;
+
+        // this.debugArray = []
 
         this.setBoundingBox(0, 0, obj.width, obj.height);
 
@@ -69,6 +72,7 @@ var Entity = function () {
     }, {
         key: 'setBoundingBox',
         value: function setBoundingBox(x, y, w, h) {
+            this.bounds = { x: x, y: y, w: w, h: h };
             this.collisionMask = new _sat.Box(new _sat.Vector(0, 0), w, h).toPolygon().translate(x, y);
         }
     }, {
@@ -122,12 +126,24 @@ var Entity = function () {
             if (this.onScreen() && this.sprite && this.visible) {
                 var camera = this.game.camera;
 
+                // if (debug && this.debugArray) {
+                //     this.debugArray.map(({x, y, color}) => {
+                //         ctx.save()
+                //         ctx.fillStyle = color
+                //         ctx.fillRect((x * 16) + camera.x, (y * 16) + camera.y, 16, 16)
+                //         ctx.restore()
+                //     })
+                // }
+
                 this.sprite.draw(Math.floor(this.x + camera.x), Math.floor(this.y + camera.y));
             }
         }
     }, {
         key: 'collide',
         value: function collide() /*element, response*/{}
+    }, {
+        key: 'update',
+        value: function update() {}
     }, {
         key: 'overlapTest',
         value: function overlapTest(obj) {
@@ -147,6 +163,8 @@ var Entity = function () {
 
             var scene = this.game.scene;
             var _scene$map = scene.map,
+                width = _scene$map.width,
+                height = _scene$map.height,
                 tilewidth = _scene$map.tilewidth,
                 tileheight = _scene$map.tileheight;
 
@@ -158,36 +176,46 @@ var Entity = function () {
 
             this.expectedX = this.x + this.force.x;
             this.expectedY = this.y + this.force.y;
+            this.onFloor = false;
+            this.onCeiling = false;
+            // this.debugArray = []
 
-            if (this.expectedX < 0) this.force.x = 0;
-            if (this.expectedY + this.height < 0) this.force.y = 0;
+            if (this.expectedX < 0 || this.expectedX + this.width > width * tileheight) this.force.x = 0;
+            if (this.expectedY + this.height < 0 || this.expectedY > height * tileheight) this.force.y = 0;
 
-            var PX = Math.round(this.expectedX / tilewidth);
-            var PY = Math.round(this.expectedY / tileheight);
-            var PW = Math.round((this.expectedX + this.width) / tilewidth);
-            var PH = Math.round((this.expectedY + this.height) / tileheight);
+            // small hacks to prevent the object from getting jammed :/
+            var PX = Math.ceil((this.expectedX + this.bounds.x + 0.3) / tilewidth) - 1;
+            var PY = Math.ceil((this.expectedY + this.bounds.y) / tileheight) - 1;
+            var PW = Math.ceil((this.expectedX + this.bounds.x + this.bounds.w) / tilewidth);
+            var PH = Math.ceil((this.expectedY + this.bounds.y + this.bounds.h) / tileheight);
 
-            if ((0, _helpers.isValidArray)(this.collisionLayers)) {
+            if ((0, _helpers.isValidArray)(this.collisionLayers) && this.collisionMask) {
                 this.collisionLayers.map(function (layerId) {
                     var layer = scene.getLayer(layerId);
                     if (layer.type === _constants.NODE_TYPE.LAYER) {
-                        for (var y = PY; y <= PH; y++) {
-                            for (var x = PX; x <= PW; x++) {
+                        for (var y = PY; y < PH; y++) {
+                            for (var x = PX; x < PW; x++) {
                                 var tile = layer.getTile(x, y);
 
+                                // this.debugArray.push({x, y, color: 'rgba(0,255,255,0.1)'})
                                 if (tile && tile.isSolid()) {
                                     var isOneWay = tile.isOneWay();
-                                    var jumpThrough = !(isOneWay && _this2.force.y < 0 && !_this2.onFloor);
                                     // fix overlaping when force.y is too high
                                     if (_this2.force.y > tileheight / 2) {
                                         _this2.force.y = tileheight / 2;
                                     }
-                                    var overlap = tile.overlapTest(_this2.getTranslatedBounds(_this2.x + _this2.force.x, _this2.y + _this2.force.y));
-                                    // @fixme
-                                    if (overlap.y && jumpThrough) {
-                                        _this2.force.y += overlap.y;
-                                    } else if (overlap.x && !isOneWay) {
-                                        _this2.force.x ? _this2.force.x += overlap.x : _this2.x += overlap.x;
+
+                                    if (!(isOneWay && _this2.force.y < 0 && !_this2.onFloor)) {
+                                        var overlapY = tile.overlapTest(_this2.getTranslatedBounds(_this2.x + _this2.force.x, _this2.y + _this2.force.y));
+                                        if (overlapY.y) {
+                                            _this2.force.y += overlapY.y;
+                                            _this2.onFloor = overlapY.y < 0;
+                                            _this2.onCeiling = overlapY.y > 0;
+                                            // this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
+                                        } else if (!isOneWay && overlapY.x) {
+                                            _this2.force.x += overlapY.x;
+                                            // this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3'})
+                                        }
                                     }
                                 }
                             }
@@ -198,9 +226,6 @@ var Entity = function () {
 
             this.x += this.force.x;
             this.y += this.force.y;
-
-            this.onFloor = this.y < this.expectedY;
-            this.onCeiling = this.y > this.expectedY;
         }
     }, {
         key: 'kill',
