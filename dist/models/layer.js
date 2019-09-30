@@ -9,15 +9,9 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _tile = require('./tile');
-
-var _tile2 = _interopRequireDefault(_tile);
-
 var _constants = require('../constants');
 
 var _helpers = require('../helpers');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -51,22 +45,13 @@ var Layer = function () {
 
         this.data = [];
         this.objects = [];
-        this.activeObjects = [];
+        this.activeObjectsCount = 0;
 
         if (data) {
-            this.data = [].concat(_toConsumableArray(Array(width).keys())).map(function () {
-                return Array(height);
+            this.data = data;
+            this.data.map(function (gid) {
+                return gid > 0 && game.scene.createTile(gid);
             });
-            var j = 0;
-            for (var y = 0; y < height; y++) {
-                for (var x = 0; x < width; x++) {
-                    var tileId = data[j];
-                    if (tileId > 0) {
-                        this.data[x][y] = new _tile2.default(tileId, x, y, game);
-                    }
-                    j++;
-                }
-            }
         } else if (objects) {
             objects.map(function (obj) {
                 return _this.addObject(obj);
@@ -82,19 +67,19 @@ var Layer = function () {
             if ((0, _helpers.isValidArray)(this.objects)) {
                 var scene = this.game.scene;
 
-
-                this.clear();
+                this.activeObjectsCount = 0;
                 this.objects.map(function (obj) {
                     if (obj.onScreen()) {
-                        _this2.activeObjects.map(function (activeObj) {
-                            return activeObj.overlapTest(obj);
+                        _this2.objects.map(function (activeObj) {
+                            return activeObj.id !== obj.id && activeObj.overlapTest(obj);
                         });
 
                         if (obj.light && obj.visible) scene.addLight(obj.getLight());
                         if (obj.shadowCaster && obj.visible) scene.addLightMask.apply(scene, _toConsumableArray(obj.getLightMask()));
 
                         obj.update && obj.update();
-                        obj.dead ? _this2.removeObject(obj) : _this2.activeObjects.push(obj);
+                        obj.dead && _this2.removeObject(obj);
+                        _this2.activeObjectsCount++;
                     }
                 });
             }
@@ -138,7 +123,7 @@ var Layer = function () {
                 var x = Math.floor(camera.x % tilewidth);
                 var _x = Math.floor(-camera.x / tilewidth);
                 while (x < resolutionX) {
-                    var tile = _this3.getTile(_x, _y, _this3.id);
+                    var tile = _this3.getTile(_x, _y);
                     if (tile) {
                         // create shadow casters if necessary
                         if (_this3.id === scene.shadowCastingLayer && tile.isShadowCaster()) {
@@ -147,7 +132,7 @@ var Layer = function () {
                                 return scene.addLightMask((0, _helpers.createPolygonObject)(x, y, points));
                             });
                         }
-                        tile.draw();
+                        tile.draw(x, y + (tileheight - tile.height));
                     }
                     x += tilewidth;
                     _x++;
@@ -163,20 +148,25 @@ var Layer = function () {
     }, {
         key: 'getTile',
         value: function getTile(x, y) {
-            return this.isInRange(x, y) && this.data[x][y];
+            if (this.isInRange(x, y)) {
+                var gid = this.data[x + this.width * y];
+                return this.game.scene.getTileObject(gid);
+            }
+            return null;
         }
     }, {
         key: 'putTile',
         value: function putTile(x, y, tileId) {
             if (this.isInRange(x, y)) {
-                this.data[x][y] = new _tile2.default(tileId, x, y, this.game);
+                this.game.scene.createTile(tileId);
+                this.data[x + this.width * y] = tileId;
             }
         }
     }, {
         key: 'clearTile',
         value: function clearTile(x, y) {
             if (this.isInRange(x, y)) {
-                this.data[x][y] = null;
+                this.data[x + this.width * y] = null;
             }
         }
     }, {
@@ -203,12 +193,6 @@ var Layer = function () {
         key: 'removeObject',
         value: function removeObject(obj) {
             this.objects.splice(this.objects.indexOf(obj), 1);
-        }
-    }, {
-        key: 'clear',
-        value: function clear() {
-            delete this.activeObjects;
-            this.activeObjects = [];
         }
     }, {
         key: 'isInRange',

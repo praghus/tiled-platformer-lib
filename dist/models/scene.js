@@ -7,17 +7,21 @@ exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _illuminated = require('./illuminated');
+var _lightLayer = require('./light-layer');
 
 var _helpers = require('../helpers');
+
+var _layer = require('./layer');
+
+var _layer2 = _interopRequireDefault(_layer);
 
 var _sprite = require('./sprite');
 
 var _sprite2 = _interopRequireDefault(_sprite);
 
-var _layer = require('./layer');
+var _tile = require('./tile');
 
-var _layer2 = _interopRequireDefault(_layer);
+var _tile2 = _interopRequireDefault(_tile);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -30,10 +34,9 @@ var Scene = function () {
 
         _classCallCheck(this, Scene);
 
-        this.activeObjects = [];
         this.assets = assets;
-        this.entities = [];
         this.dynamicLights = false;
+        this.entities = [];
         this.game = game;
         this.gravity = 1;
         this.height = null;
@@ -120,6 +123,14 @@ var Scene = function () {
             return this.sprites[id];
         }
     }, {
+        key: 'createTile',
+        value: function createTile(id) {
+            if (!this.tiles[id]) {
+                this.tiles[id] = new _tile2.default(id, this.game);
+            }
+            return this.tiles[id];
+        }
+    }, {
         key: 'addLight',
         value: function addLight(light) {
             this.lights.push(light);
@@ -138,7 +149,7 @@ var Scene = function () {
         key: 'setShadowCastingLayer',
         value: function setShadowCastingLayer(layerId, index) {
             this.shadowCastingLayer = layerId;
-            this.addLayer(new _illuminated.IlluminatedLayer(this.game), index);
+            this.addLayer(new _lightLayer.LightLayer(this.game), index);
         }
     }, {
         key: 'setGravity',
@@ -233,6 +244,11 @@ var Scene = function () {
         key: 'getTile',
         value: function getTile(x, y, layerId) {
             return this.getLayer(layerId).getTile(x, y);
+        }
+    }, {
+        key: 'getTileObject',
+        value: function getTileObject(gid) {
+            return this.tiles[gid] || null;
         }
     }, {
         key: 'putTile',

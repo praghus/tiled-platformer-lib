@@ -5,12 +5,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getRGBA = exports.path = exports.getTileProperties = exports.getPerformance = exports.getEmptyImage = exports.normalize = exports.getFilename = exports.isValidArray = exports.overlap = exports.randomInt = exports.random = exports.noop = undefined;
 exports.getProperties = getProperties;
+exports.calculatePolygonBounds = calculatePolygonBounds;
 exports.createPolygonObject = createPolygonObject;
 exports.createDiscObject = createDiscObject;
 exports.createLamp = createLamp;
 exports.createCanvasAnd2dContext = createCanvasAnd2dContext;
 
-var _illuminated = require('./models/illuminated');
+var _lucendi = require('lucendi');
 
 var noop = exports.noop = function noop() {};
 var random = exports.random = function random(min, max) {
@@ -59,29 +60,53 @@ function getProperties(obj, property) {
     return obj.properties && obj.properties[property];
 }
 
+function calculatePolygonBounds(points) {
+    var xs = points.map(function (p) {
+        return p[0];
+    });
+    var ys = points.map(function (p) {
+        return p[1];
+    });
+
+    var minX = Math.min.apply(null, xs);
+    var minY = Math.min.apply(null, ys);
+    var maxX = Math.max.apply(null, xs);
+    var maxY = Math.max.apply(null, ys);
+
+    var offsetX = minX < 0 && minX || 0;
+    var offsetY = minY < 0 && minY || 0;
+
+    return {
+        x: offsetX,
+        y: offsetY,
+        w: maxX + Math.abs(offsetX),
+        h: maxY + Math.abs(offsetY)
+    };
+}
+
 /**
  * illuminated.js
  */
 
 function createPolygonObject(x, y, points) {
-    return new _illuminated.PolygonObject({ points: points.map(function (v) {
-            return new _illuminated.Vec2(v.x + x, v.y + y);
+    return new _lucendi.PolygonObject({ points: points.map(function (v) {
+            return new _lucendi.Vec2(v.x + x, v.y + y);
         }) });
 }
 
 function createDiscObject(x, y, radius) {
-    return new _illuminated.DiscObject({ center: new _illuminated.Vec2(x + radius, y + radius), radius: radius });
+    return new _lucendi.DiscObject({ center: new _lucendi.Vec2(x + radius, y + radius), radius: radius });
 }
 
 function createLamp(x, y, distance, color) {
     var radius = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 8;
 
-    return new _illuminated.Lamp({
+    return new _lucendi.Lamp({
         color: color,
         distance: distance,
         radius: radius,
         samples: 1,
-        position: new _illuminated.Vec2(x, y)
+        position: new _lucendi.Vec2(x, y)
     });
 }
 

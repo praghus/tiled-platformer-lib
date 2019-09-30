@@ -11,13 +11,13 @@ var _sprite = require('./sprite');
 
 var _sprite2 = _interopRequireDefault(_sprite);
 
-var _illuminated = require('./illuminated');
+var _lucendi = require('lucendi');
 
 var _sat = require('sat');
 
-var _helpers = require('../helpers');
-
 var _constants = require('../constants');
+
+var _helpers = require('../helpers');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -43,14 +43,13 @@ var Entity = function () {
         this.solid = false;
         this.speed = 0;
         this.states = null;
-
-        // this.debugArray = []
-
-        this.setBoundingBox(0, 0, obj.width, obj.height);
+        this.debugArray = [];
 
         Object.keys(obj).map(function (prop) {
             _this[prop] = obj[prop];
         });
+
+        (0, _helpers.isValidArray)(this.points) ? this.setBoundingPolygon(0, 0, this.points) : this.setBoundingBox(0, 0, obj.width, obj.height);
 
         if (this.asset || this.gid) {
             this.sprite = new _sprite2.default({
@@ -78,6 +77,7 @@ var Entity = function () {
     }, {
         key: 'setBoundingPolygon',
         value: function setBoundingPolygon(x, y, points) {
+            this.bounds = (0, _helpers.calculatePolygonBounds)(points);
             this.collisionMask = new _sat.Polygon(new _sat.Vector(x, y), points.map(function (v) {
                 return new _sat.Vector(v[0], v[1]);
             }));
@@ -105,35 +105,46 @@ var Entity = function () {
                 _game$scene$map = _game$scene.map,
                 tilewidth = _game$scene$map.tilewidth,
                 tileheight = _game$scene$map.tileheight;
-            var x = this.x,
-                y = this.y,
-                width = this.width,
-                height = this.height,
+            var bounds = this.bounds,
                 radius = this.radius;
+            var x = bounds.x,
+                y = bounds.y,
+                w = bounds.w,
+                h = bounds.h;
 
 
             if (radius) {
-                var cx = x + width / 2;
-                var cy = y + height / 2;
+                var cx = this.x + x + w / 2;
+                var cy = this.y + y + h / 2;
                 return cx + radius > -camera.x && cy + radius > -camera.y && cx - radius < -camera.x + resolutionX && cy - radius < -camera.y + resolutionY;
             } else {
-                return x + width + tilewidth > -camera.x && y + height + tileheight > -camera.y && x - tilewidth < -camera.x + resolutionX && y - tileheight < -camera.y + resolutionY;
+                var _cx = this.x + x;
+                var _cy = this.y + y;
+                return _cx + w + tilewidth > -camera.x && _cy + h + tileheight > -camera.y && _cx - tilewidth < -camera.x + resolutionX && _cy - tileheight < -camera.y + resolutionY;
             }
         }
     }, {
         key: 'draw',
         value: function draw() {
             if (this.onScreen() && this.sprite && this.visible) {
-                var camera = this.game.camera;
+                var _game2 = this.game,
+                    camera = _game2.camera,
+                    ctx = _game2.ctx,
+                    debug = _game2.debug;
 
-                // if (debug && this.debugArray) {
-                //     this.debugArray.map(({x, y, color}) => {
-                //         ctx.save()
-                //         ctx.fillStyle = color
-                //         ctx.fillRect((x * 16) + camera.x, (y * 16) + camera.y, 16, 16)
-                //         ctx.restore()
-                //     })
-                // }
+
+                if (debug && this.debugArray) {
+                    this.debugArray.map(function (_ref) {
+                        var x = _ref.x,
+                            y = _ref.y,
+                            color = _ref.color;
+
+                        ctx.save();
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x * 16 + camera.x, y * 16 + camera.y, 16, 16);
+                        ctx.restore();
+                    });
+                }
 
                 this.sprite.draw(Math.floor(this.x + camera.x), Math.floor(this.y + camera.y));
             }
@@ -147,9 +158,9 @@ var Entity = function () {
     }, {
         key: 'overlapTest',
         value: function overlapTest(obj) {
-            if (this.collisionMask && obj.collisionMask) {
+            if ((this.onScreen() || this.activated) && this.collisionMask && obj.collisionMask) {
                 var response = new _sat.Response();
-                if (!this.dead && (this.onScreen() || this.activated) && (0, _sat.testPolygonPolygon)(this.getTranslatedBounds(), obj.getTranslatedBounds(), response)) {
+                if ((0, _sat.testPolygonPolygon)(this.getTranslatedBounds(), obj.getTranslatedBounds(), response)) {
                     this.collide(obj, response);
                     obj.collide(this, response);
                 }
@@ -161,7 +172,9 @@ var Entity = function () {
         value: function move() {
             var _this2 = this;
 
-            var scene = this.game.scene;
+            var _game3 = this.game,
+                scene = _game3.scene,
+                debug = _game3.debug;
             var _scene$map = scene.map,
                 width = _scene$map.width,
                 height = _scene$map.height,
@@ -178,7 +191,7 @@ var Entity = function () {
             this.expectedY = this.y + this.force.y;
             this.onFloor = false;
             this.onCeiling = false;
-            // this.debugArray = []
+            this.debugArray = [];
 
             if (this.expectedX < 0 || this.expectedX + this.width > width * tileheight) this.force.x = 0;
             if (this.expectedY + this.height < 0 || this.expectedY > height * tileheight) this.force.y = 0;
@@ -197,7 +210,7 @@ var Entity = function () {
                             for (var x = PX; x < PW; x++) {
                                 var tile = layer.getTile(x, y);
 
-                                // this.debugArray.push({x, y, color: 'rgba(0,255,255,0.1)'})
+                                debug && _this2.debugArray.push({ x: x, y: y, color: 'rgba(0,255,255,0.1)' });
                                 if (tile && tile.isSolid()) {
                                     var isOneWay = tile.isOneWay();
                                     // fix overlaping when force.y is too high
@@ -206,15 +219,15 @@ var Entity = function () {
                                     }
 
                                     if (!(isOneWay && _this2.force.y < 0 && !_this2.onFloor)) {
-                                        var overlapY = tile.overlapTest(_this2.getTranslatedBounds(_this2.x + _this2.force.x, _this2.y + _this2.force.y));
-                                        if (overlapY.y) {
-                                            _this2.force.y += overlapY.y;
-                                            _this2.onFloor = overlapY.y < 0;
-                                            _this2.onCeiling = overlapY.y > 0;
-                                            // this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
-                                        } else if (!isOneWay && overlapY.x) {
-                                            _this2.force.x += overlapY.x;
-                                            // this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3'})
+                                        var overlap = tile.overlapTest(_this2.getTranslatedBounds(_this2.x + _this2.force.x - x * tilewidth, _this2.y + _this2.force.y - y * tileheight));
+                                        if (overlap && overlap.y) {
+                                            _this2.force.y += overlap.y;
+                                            _this2.onFloor = overlap.y < 0;
+                                            _this2.onCeiling = overlap.y > 0;
+                                            debug && _this2.debugArray.push({ x: x, y: y, color: 'rgba(255,0,0,0.3)' });
+                                        } else if (!isOneWay && overlap && overlap.x) {
+                                            _this2.force.x += overlap.x;
+                                            debug && _this2.debugArray.push({ x: x, y: y, color: 'rgba(255,0,0,0.3' });
                                         }
                                     }
                                 }
@@ -237,7 +250,7 @@ var Entity = function () {
         value: function getLight() {
             var camera = this.game.camera;
 
-            this.light.position = new _illuminated.Vec2(this.x + this.width / 2 + camera.x, this.y + this.height / 2 + camera.y);
+            this.light.position = new _lucendi.Vec2(this.x + this.width / 2 + camera.x, this.y + this.height / 2 + camera.y);
             return this.light;
         }
     }, {
