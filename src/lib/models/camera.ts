@@ -1,69 +1,69 @@
+import { Scene, Entity } from 'tiled-platformer-lib'
 import { Box, Vector } from 'sat'
 
-export default class Camera {
-    constructor (game) {
-        this.game = game // remove game reference, add only map reference
-        this.x = 0
-        this.y = 0
+export class Camera {
+    public x: number
+    public y: number
+    public bounds: SAT.Box
+    public follow: Entity
+    public middlePoint: SAT.Vector
+    public magnitude = 2
+    public shakeDirection = 1
 
-        // width, height
-
-        this.bounds = null
-        this.middlePoint = null
-        this.magnitude = 2
-        this.shakeDirection = 1
+    constructor (public scene: Scene) {
         this.shake = this.shake.bind(this)
         this.setBounds = this.setBounds.bind(this)        
         this.setDefaultMiddlePoint()
     }
 
-    setDefaultMiddlePoint () {
-        if (this.game.scene) {
-            const { 
-                resolutionX, 
-                resolutionY 
-            } = this.game.scene
-            
-            this.setMiddlePoint(
-                resolutionX / 2,
-                resolutionY / 2
-            )
+    center (): void {
+        if (this.follow) {
+            this.x = -((this.follow.x + (this.follow.width / 2)) - this.middlePoint.x)
+            this.y = -((this.follow.y + this.follow.height) - this.middlePoint.y)
         }
-        else this.setMiddlePoint(0, 0)
     }
 
-    setMiddlePoint (x, y) {
-        this.middlePoint = { x, y }
-    }
-
-    setFollow (follow, center = true) {
-        this.follow = follow
-        center && this.center()
-    }
-
-    setBounds (x, y, w, h) {
-        this.bounds = new Box(new Vector(x, y), w, h)
-        this.center()
-    }
-
-    getBounds () {
+    getBounds (): SAT.Box {
         if (!this.bounds) {
-            const { 
-                width, 
-                height, 
-                tilewidth, 
-                tileheight  
-            } = this.game.scene.map
+            const { width, height, tilewidth, tileheight } = this.scene.map
             this.setBounds(0, 0, width * tilewidth, height * tileheight)
         }
         return this.bounds
     }
 
-    update () {
-        if (!this.game.scene || !this.follow) {
+    setBounds (x: number, y: number, width: number, height: number): void {
+        this.bounds = new Box(new Vector(x, y), width, height)
+        this.center()
+    }
+
+    setDefaultMiddlePoint (): void {
+        const { resolutionX, resolutionY } = this.scene
+        this.setMiddlePoint(resolutionX / 2, resolutionY / 2)
+    }
+
+    setMiddlePoint (x: number, y: number): void {
+        this.middlePoint = new Vector(x, y)
+    }
+
+    setFollow (follow: Entity, center = true): void {
+        this.follow = follow
+        center && this.center()
+    }
+
+    shake (): void {
+        if (this.magnitude < 0) {
+            this.magnitude = 2
             return
         }
-        const { resolutionX, resolutionY, map } = this.game.scene
+        this.magnitude -= 0.2
+        setTimeout(this.shake, 50)
+    }
+
+    update (): void {
+        if (!this.follow) {
+            return
+        }
+        const { resolutionX, resolutionY, map } = this.scene
         const { width, height, tilewidth, tileheight } = map
 
         const moveX = Math.round((
@@ -112,21 +112,5 @@ export default class Camera {
             else this.x -= this.magnitude
             this.shakeDirection = this.shakeDirection < 4 ? this.shakeDirection + 1 : 1
         }
-    }
-
-    center () {
-        if (this.follow) {
-            this.x = -((this.follow.x + (this.follow.width / 2)) - this.middlePoint.x)
-            this.y = -((this.follow.y + this.follow.height) - this.middlePoint.y)
-        }
-    }
-
-    shake () {
-        if (this.magnitude < 0) {
-            this.magnitude = 2
-            return
-        }
-        this.magnitude -= 0.2
-        setTimeout(this.shake, 50)
     }
 }

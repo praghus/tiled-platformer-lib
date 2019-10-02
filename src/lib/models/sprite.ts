@@ -1,34 +1,30 @@
+import { Tile, Scene } from 'tiled-platformer-lib'
+import { getPerformance, isValidArray, normalize } from '../helpers'
 
-import { 
-    getPerformance, 
-    isValidArray, 
-    normalize 
-} from '../helpers'
+export class Sprite {
+    public gid: number
+    public width: number
+    public height: number
+    public animFrame = 0
+    public animation: Record<string, any>;
+    public asset: HTMLImageElement;
+    public tile: Tile
+    public then: number
+    public frameStart: number 
 
-export default class Sprite {
-    constructor (props, game) {
-        const {
-            animation, 
-            gid,
-            asset,
-            width, 
-            height
-        } = props
-        
-        this.game = game
-        this.asset = asset
-        this.gid = gid
-        this.tile = gid && game.scene.createTile(gid)
-        this.height = height
-        this.width = width
-        this.animation = animation
+    constructor (props: StringTMap<any>, scene: Scene) {
+        this.gid = props.gid
+        this.asset = scene.assets[props.aid]
+        this.tile = this.gid && scene.createTile(this.gid)
+        this.height = props.height
+        this.width = props.width
+        this.animation = props.animation
         this.animFrame = 0
         this.then = getPerformance()
         this.frameStart = getPerformance()
     }
 
-
-    animate (animation = this.animation) {
+    animate (animation = this.animation): void {
         this.animFrame = this.animFrame || 0
         this.frameStart = getPerformance()
 
@@ -56,21 +52,10 @@ export default class Sprite {
         }
     }
 
-    draw (x, y, scale = 1) {
-        const { 
-            animation, 
-            animFrame, 
-            game, 
-            tile,
-            width, 
-            height 
-        } = this
-
-        const { ctx, scene: { assets } } = game
-        const sprite = assets[this.asset]
-
+    draw (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1) {
+        const { asset, animation, animFrame, tile, width, height } = this
         if (tile) {
-            tile.draw(x, y, scale)
+            tile.draw(ctx, x, y, scale)
         }
         else if (animation) {
             const { frames, strip } = animation
@@ -80,14 +65,14 @@ export default class Sprite {
             const posY = strip
                 ? strip.y
                 : isValidArray(frames) && frames[animFrame][1]
-                
-            ctx.drawImage(sprite,
+
+            ctx.drawImage(asset,
                 posX, posY, animation.width, animation.height,
                 x, y, animation.width * scale, animation.height * scale
             )
         }
-        else if (sprite) {
-            ctx.drawImage(sprite, 0, 0, width, height, x, y, width * scale, height * scale)
+        else if (asset) {
+            ctx.drawImage(asset, 0, 0, width, height, x, y, width * scale, height * scale)
         }
     }
 }

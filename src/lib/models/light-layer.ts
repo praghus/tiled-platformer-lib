@@ -1,33 +1,24 @@
-import Layer from './layer'
 import { Dark, LineOfSight } from 'lucendi'
+import { Layer } from './layer'
 
-export default class LightLayer extends Layer {
-    constructor (game) {
-        super(game)
-        this.game = game
-    }
+export class LightLayer extends Layer {
+    draw (ctx: CanvasRenderingContext2D) {
+        const {
+            lights,
+            lightmask,
+            resolutionX,
+            resolutionY
+        } = this.scene
 
-    draw () {
-        const { 
-            ctx, 
-            scene: { 
-                dynamicLights, 
-                lights, 
-                lightmask, 
-                resolutionX, 
-                resolutionY 
-            }
-        } = this.game    
-
-        if (dynamicLights) {
+        if (this.scene.getProperty('inDark')) {
             ctx.save()
             ctx.globalCompositeOperation = 'lighter'
-        
+
             lights.map((l) => {
                 const lighting = new LineOfSight({
-                    light: l, 
+                    light: l,
                     objects: lightmask
-                }) 
+                })
                 lighting.calculate(resolutionX, resolutionY)
                 lighting.render(ctx)
             })
