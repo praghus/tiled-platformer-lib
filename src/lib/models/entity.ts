@@ -1,4 +1,4 @@
-import { TmxObject, Scene } from 'tiled-platformer-lib'
+import { TmxObject, Scene, StringTMap } from 'tiled-platformer-lib'
 import { NODE_TYPE } from '../constants'
 import { Sprite } from './sprite'
 import { Point } from 'lucendi'
@@ -17,9 +17,9 @@ import {
 } from '../helpers'
 
 
-export class Entity implements Entity {
+export class Entity {
     public id: number
-    // @todo: replace x, y with SAT.Vector
+    // @todo: replace x, y with SAT.Vector pos
     public x: number
     public y: number
     public width: number
@@ -36,8 +36,7 @@ export class Entity implements Entity {
     public collisionMask: SAT.Box | SAT.Polygon
     public dead: boolean
     public collisionLayers: number[]
-    public onCeiling: boolean
-    public onFloor: boolean
+    public onGround: boolean 
     public shadowCaster: boolean
     public solid: boolean
     public visible: boolean
@@ -45,6 +44,8 @@ export class Entity implements Entity {
     public points: [number[]]
     public light: any
     public sprite: Sprite
+
+    // public debugArray: any[]
 
     public collide: (obj: Entity, response: SAT.Response) => void
     public update: () => void
@@ -126,14 +127,12 @@ export class Entity implements Entity {
         }
     }
 
-    // update () {
-    //     // 
-    // }
 
     draw (ctx: CanvasRenderingContext2D): void {
         if (this.onScreen() && this.sprite && this.visible) {
             const { camera } = this.scene
-
+            
+            // const debug = this.scene.getProperty('debug')
             // if (debug && this.debugArray) {
             //     this.debugArray.map(({x, y, color}) => {
             //         ctx.save()
@@ -150,11 +149,6 @@ export class Entity implements Entity {
         }
     }
 
-    // collide (obj?: Entity, response?: SAT.Response) {
-    //     console.info(obj, response)
-    //     //
-    // }
-
     overlapTest (obj: Entity): void {
         if ((this.onScreen()) && this.collisionMask && obj.collisionMask) {
             const response = new Response()
@@ -169,18 +163,13 @@ export class Entity implements Entity {
     }
 
     move (): void {
-        const { map: { width, height, tilewidth, tileheight } } = this.scene
-
         if (!this.force.x && !this.force.y) return
-
-        // if (this.force.x > this.maxSpeed) this.force.x = this.maxSpeed
-        // if (this.force.x < -this.maxSpeed) this.force.x = -this.maxSpeed
+        
+        const { map: { width, height, tilewidth, tileheight } } = this.scene
+        //const debug = this.scene.getProperty('debug')
+        
         this.expectedPos = new Vector(this.x + this.force.x, this.y + this.force.y)
-        // this.expectedPos.x = this.x + this.force.x
-        // this.expectedPos.y = this.y + this.force.y
-        this.onFloor = false
-        this.onCeiling = false
-        // this.debugArray = []
+        //this.debugArray = []
 
         if (this.expectedPos.x < 0 || this.expectedPos.x + this.width > width * tileheight) this.force.x = 0
         if (this.expectedPos.y + this.height < 0 || this.expectedPos.y > height * tileheight) this.force.y = 0
@@ -198,31 +187,18 @@ export class Entity implements Entity {
                     for (let y = PY; y < PH; y++) {
                         for (let x = PX; x < PW; x++) {
                             const tile = layer.getTile(x, y)
-
                             // debug && this.debugArray.push({x, y, color: 'rgba(0,255,255,0.1)'})
                             if (tile && tile.isSolid()) {
-                                const isOneWay = tile.isOneWay()
                                 // fix overlaping when force.y is too high
-                                if (this.force.y > tileheight / 2) {
-                                    this.force.y = tileheight / 2
-                                }
-
-                                if (!(isOneWay && this.force.y < 0 && !this.onFloor)) {
-                                    const overlap = tile.overlapTest(
-                                        this.getTranslatedBounds(
-                                            (this.x + this.force.x) - (x * tilewidth),
-                                            (this.y + this.force.y) - (y * tileheight)
-                                        )
-                                    )
-                                    if (overlap && overlap.y) {
+                                this.force.y = Math.min(this.force.y, tileheight / 2)
+                                const overlap = tile.overlapTest(this, x, y)
+                                if (overlap) {
+                                    // debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
+                                    if (overlap.y && !(tile.isOneWay() && this.force.y < 0)) {
                                         this.force.y += overlap.y
-                                        this.onFloor = overlap.y < 0
-                                        this.onCeiling = overlap.y > 0
-                                        // debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
                                     }
-                                    else if (!isOneWay && overlap && overlap.x) {
+                                    else if (!tile.isSlope() && !tile.isOneWay()) {
                                         this.force.x += overlap.x
-                                        // debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3'})
                                     }
                                 }
                             }
@@ -234,6 +210,10 @@ export class Entity implements Entity {
 
         this.x += this.force.x
         this.y += this.force.y
+        this.onGround = this.y < this.expectedPos.y
+        if (Math.abs(this.force.y) <= 0.2) {
+            this.force.y = 0
+        }
     }
 
     kill (): void {

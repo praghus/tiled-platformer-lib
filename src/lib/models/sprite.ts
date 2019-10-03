@@ -1,4 +1,4 @@
-import { Tile, Scene } from 'tiled-platformer-lib'
+import { Tile, Scene, StringTMap } from 'tiled-platformer-lib'
 import { getPerformance, isValidArray, normalize } from '../helpers'
 
 export class Sprite {

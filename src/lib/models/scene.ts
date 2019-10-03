@@ -1,21 +1,21 @@
-import { EntityModel, TmxMap, Viewport, Constructable, TmxObject, TmxTileset } from 'tiled-platformer-lib'
+import { EntityModel, TmxMap, Viewport, Constructable, TmxObject, TmxTileset, StringTMap } from 'tiled-platformer-lib'
 import { isValidArray, noop } from '../helpers'
 import { Camera } from './camera'
-import { LightLayer } from './light-layer'
+import { Entity } from './entity'
 import { Layer } from './layer'
+import { LightLayer } from './light-layer'
 import { Sprite } from './sprite'
 import { Tile } from './tile'
-import { Entity } from './entity'
 
 export class Scene implements Scene {
-    public assets: StringTMap<HTMLImageElement>
+    public assets: StringTMap<HTMLImageElement> = {}
     public camera: Camera
     public entities: EntityModel[] = []
     public layers: Layer[] = []
     public lights: any[] = []
     public lightmask: any[] = []
-    public timeoutsPool: Record<string, any> = {}
-    public properties: Record<string, any> = {}
+    public timeoutsPool: StringTMap<any> = {}
+    public properties: StringTMap<any> = {}
     public sprites: StringTMap<Sprite> = {}
     public tiles: StringTMap<Tile> = {}
     public map: TmxMap
@@ -28,13 +28,18 @@ export class Scene implements Scene {
     public resolutionX: number
     public resolutionY: number
     public scale: number
+    public timer: number
 
-    public sfx: (snd: any) => void
-
-    constructor (props: StringTMap<any>) {
-        this.assets = props.assets
-        this.sfx = props.sfx || noop
-        this.resize(props.viewport)
+    constructor ( 
+        viewport: Viewport,
+        props?: StringTMap<any>
+    ) {
+        if (props && Object.keys(props).length > 0) {
+            Object.keys(props).map((k) => {
+                this[k] = props[k]
+            })
+        }
+        this.resize(viewport)
         this.camera = new Camera(this)
     }
 
@@ -48,10 +53,13 @@ export class Scene implements Scene {
     resize (viewport: Viewport): void {
         this.width = viewport.width
         this.height = viewport.height
-        this.resolutionX = viewport.resolutionX || viewport.width
-        this.resolutionY = viewport.resolutionY || viewport.height
         this.scale = viewport.scale || 1
-        // this.camera.resize(viewport)
+        this.resolutionX = Math.round(this.width / this.scale)
+        this.resolutionY = Math.round(this.height / this.scale)
+    }
+
+    addAssets (assets: StringTMap<HTMLImageElement>) {
+        this.assets = assets
     }
 
     addTmxMap (data: TmxMap, entities: EntityModel[]): void {
@@ -68,6 +76,7 @@ export class Scene implements Scene {
     }
 
     update (): void {
+        if (!this.timer) this.timer = new Date().valueOf()
         this._clear()
         this.camera.update()
         this.layers.map((layer) => layer instanceof Layer && layer.update())

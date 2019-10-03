@@ -1,24 +1,24 @@
 declare namespace TPL {
-    interface StringTMap<T> {
+    export interface StringTMap<T> {
         [key: string]: T;
     }
 
-    interface NumberTMap<T> {
+    export interface NumberTMap<T> {
         [key: number]: T;
     }
 
-    interface Constructable<T> {
+    export interface Constructable<T> {
         new(...args: any[]): T;
     }
 
     // @todo: move to @tmx-tiledmap/types
-    interface TmxFlip {
+    export interface TmxFlip {
         readonly H: boolean;
         readonly V: boolean;
         readonly D: boolean;
     }
 
-    interface TmxLayer {
+    export interface TmxLayer {
         readonly id: number;
         readonly name: string;
         readonly data?: number[];
@@ -31,7 +31,7 @@ declare namespace TPL {
         readonly visible: number;
     }
 
-    interface TmxMap {
+    export interface TmxMap {
         readonly backgroundcolor: string;
         readonly height: number;
         readonly infinite: number;
@@ -49,7 +49,7 @@ declare namespace TPL {
         readonly width: number;
     }
 
-    interface TmxTileset {
+    export interface TmxTileset {
         readonly columns: number;
         readonly firstgid: number;
         readonly name: string;
@@ -62,13 +62,13 @@ declare namespace TPL {
         readonly tiles: Tile[];
     }
 
-    interface TmxImage {
+    export interface TmxImage {
         readonly height: number;
         readonly width: number;
         readonly source: string;
     }
 
-    interface TmxObject {
+    export interface TmxObject {
         readonly flips: TmxFlip;
         readonly gid?: number;
         readonly height: number;
@@ -82,7 +82,7 @@ declare namespace TPL {
         readonly y: number;
     }
 
-    interface Viewport {
+    export interface Viewport {
         width: number;
         height: number;
         resolutionX: number;
@@ -90,7 +90,7 @@ declare namespace TPL {
         scale: number;
     }
 
-    interface EntityModel {
+    export interface EntityModel {
         asset?: string;
         animations?: StringTMap<Record<string, any>>;
         collisionLayers?: number[];
@@ -103,6 +103,7 @@ declare namespace TPL {
     export class Camera {
         x: number;
         y: number;
+        scene: Scene;
 
         constructor (scene: Scene)
 
@@ -137,11 +138,12 @@ declare namespace TPL {
         getCollisionMask(posX: number, posY: number): SAT.Polygon[];
         getNextGid(): number;
         getTerrain(): number[];
+        isSlope(): boolean;
         isSolid(): boolean;
         isOneWay(): boolean;
         isInvisible(): boolean;
         isShadowCaster(): boolean;
-        overlapTest(polygon: SAT.Polygon): any;
+        overlapTest(obj: Entity, x: number, y: number): any 
     }
 
     export class Sprite {
@@ -177,17 +179,17 @@ declare namespace TPL {
         expectedPos: SAT.Vector;
         initialPos: SAT.Vector;
         collisionMask: SAT.Box | SAT.Polygon;
-        dead: boolean;
         collisionLayers: number[];
-        onCeiling: boolean;
-        onFloor: boolean;
+        points: [number[]];
+        dead: boolean;
+        onGround: boolean;
         shadowCaster: boolean;
         solid: boolean;
         visible: boolean;
         shape: string;
-        points: [number[]];
         light: any;
         sprite: Sprite;
+        scene: Scene;
 
         constructor (obj: TmxObject, scene: Scene) 
 
@@ -216,6 +218,7 @@ declare namespace TPL {
         width: number;
         height: number;
         visible: number;
+        scene: Scene;
 
         constructor (scene: Scene, layerData?: TmxLayer) 
 
@@ -239,8 +242,8 @@ declare namespace TPL {
         layers: Layer[];
         lights: any[];
         lightmask: any[];
-        timeoutsPool: Record<string, any>;
-        properties: Record<string, any>;
+        timeoutsPool: StringTMap<any>;
+        properties: StringTMap<any>;
         sprites: StringTMap<Sprite>;
         tiles: StringTMap<Tile>;
         map: TmxMap;
@@ -253,10 +256,13 @@ declare namespace TPL {
         resolutionX: number;
         resolutionY: number;
         scale: number;
+        timer: number;
 
-        constructor(props: StringTMap<any>)
+        constructor (
+            viewport: Viewport,
+            props?: StringTMap<any>
+        )
 
-        sfx(snd: any): void;
         resize(viewport: Viewport): void;
         addTmxMap(data: TmxMap, entities: EntityModel[]): void;
         addPlayer(player: Entity, cameraFollow?: boolean): void;

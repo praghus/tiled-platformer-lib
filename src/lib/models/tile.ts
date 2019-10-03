@@ -1,4 +1,4 @@
-import { TmxTileset, Scene } from 'tiled-platformer-lib'
+import { TmxTileset, Entity, Scene } from 'tiled-platformer-lib'
 import {
     testPolygonPolygon,
     Box,
@@ -47,15 +47,21 @@ export class Tile {
         this.collisionMask = this.getCollisionMask()
     }
 
-    overlapTest (polygon: SAT.Polygon): any {
-        if (polygon instanceof Polygon) {
-            const response = new Response()
-            const hasCollision = this.collisionMask.some(
-                (shape) => testPolygonPolygon(shape, polygon, response)
-            )
-            response.clear()
-            return hasCollision && response.overlapV
-        }
+    overlapTest (obj: Entity, x: number, y: number): any {
+        const polygon = obj.getTranslatedBounds(
+            (obj.x + obj.force.x) - (x * this.width),
+            (obj.y + obj.force.y) - (y *  this.height)
+        )
+        const response = new Response()
+        const hasCollision = this.collisionMask.some(
+            (shape) => testPolygonPolygon(shape, polygon, response)
+        )
+        response.clear()
+        return hasCollision && response.overlapV
+    }
+
+    isSlope (): boolean {
+        return this.type === TILE_TYPE.SLOPE
     }
 
     isSolid (): boolean {

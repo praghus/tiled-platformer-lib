@@ -11,5 +11,6 @@ export enum NODE_TYPE {
 export enum TILE_TYPE {
     NON_COLLIDING = 'no_collide',
     ONE_WAY = 'one_way',
-    INVISIBLE = 'invisible'
+    INVISIBLE = 'invisible',
+    SLOPE = 'slope'
 }

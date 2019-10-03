@@ -1,12 +1,18 @@
 import { Light, Point, Circle, Polygon } from 'lucendi'
-import { Entity, TmxTileset } from 'tiled-platformer-lib'
+import { Entity, TmxTileset, StringTMap } from 'tiled-platformer-lib'
 
 export const noop = (): void => {}
+
 export const random = (min: number, max: number): number => min + (Math.random() * (max - min))
+
 export const randomInt = (min: number, max: number): number => Math.round(random(min, max))
+
 export const overlap = (a: Entity, b: Entity) => a.x < b.x + b.width &&  a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
+
 export const isValidArray = (arr: any): boolean => !!(arr && arr.length)
+
 export const getFilename = (path: string): string => path.replace(/^.*[\\/]/, '').split('.').slice(0, -1).join('.')
+
 export const normalize = (n: number, min: number, max: number): number => {
     while (n < min) {
         n += (max - min)
@@ -16,23 +22,25 @@ export const normalize = (n: number, min: number, max: number): number => {
     }
     return n
 }
+
 export const getEmptyImage = (): HTMLImageElement => {
     const img = document.createElement('img')
     img.src =  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4wYSESAUu+6QoAAAAF9JREFUOMutk0kOwDAIA+0q//+yeyLqkiCoywlFjFlDQYJhIxyC7IAzcTidSm7MFayIvOKfUCayjF0BrbddxkprgjR25RJkgNmGDrjmtvD/EK01Wof09ZRLq8pE6H7nE1n2iZCrGoItAAAAAElFTkSuQmCC'
     return img
 }
+
 export const getPerformance = (): number => typeof performance !== 'undefined' && performance.now()
 
-export const getTileProperties = (gid: number, tileset: TmxTileset) => {
+export const getTileProperties = (gid: number, tileset: TmxTileset): StringTMap<any> => {
     const { firstgid, tiles } = tileset
     return isValidArray(tiles) && tiles.filter((tile) => tile.id === gid - firstgid)[0] || {}
 }
 
-export function getProperties (obj, property) {
+export function getProperties (obj: any, property: string): any {
     return obj.properties && obj.properties[property]
 }
 
-export function calculatePolygonBounds (points) {
+export function calculatePolygonBounds (points: [number[]]): StringTMap<number> {
     const xs = points.map((p) => p[0])
     const ys = points.map((p) => p[1])
 
@@ -60,7 +68,7 @@ export function createDiscObject (x, y, radius) {
     return new Circle({center: new Point(x + radius, y + radius), radius})
 }
 
-export function createLamp (x, y, distance, color, radius = 8) {
+export function createLightSource (x, y, distance, color, radius = 8) {
     return new Light({
         color,
         distance,
