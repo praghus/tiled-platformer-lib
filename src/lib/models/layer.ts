@@ -1,4 +1,4 @@
-import { Scene, TmxLayer, TmxObject, Tile } from 'tiled-platformer-lib'
+import { Scene, TmxLayer, TmxObject, Tile, StringTMap } from 'tiled-platformer-lib'
 import { createPolygonObject, isValidArray } from '../helpers'
 import { NODE_TYPE } from '../constants'
 import { Entity } from './entity'
@@ -7,7 +7,7 @@ export class Layer {
     public id: number
     public name: string
     public type: string = NODE_TYPE.CUSTOM
-    public properties: Record<string, any> = {}
+    public properties: StringTMap<any> = {}
     public activeObjectsCount: number
     public width: number
     public height: number

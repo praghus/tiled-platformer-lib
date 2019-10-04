@@ -6,8 +6,8 @@ export class Sprite {
     public width: number
     public height: number
     public animFrame = 0
-    public animation: Record<string, any>;
-    public asset: HTMLImageElement;
+    public animation: StringTMap<any>
+    public asset: HTMLImageElement
     public tile: Tile
     public then: number
     public frameStart: number 

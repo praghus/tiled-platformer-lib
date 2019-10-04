@@ -2,14 +2,15 @@ import { TmxObject, Scene, StringTMap } from 'tiled-platformer-lib'
 import { NODE_TYPE } from '../constants'
 import { Sprite } from './sprite'
 import { Point } from 'lucendi'
-import { 
-    Box, 
-    Polygon, 
-    Response, 
-    Vector, 
-    testPolygonPolygon 
+import {
+    Box,
+    Polygon,
+    Response,
+    Vector,
+    testPolygonPolygon
 } from 'sat'
 import {
+    boxOverlap,
     calculatePolygonBounds,
     createDiscObject,
     createPolygonObject,
@@ -29,14 +30,14 @@ export class Entity {
     public gid: number
     public radius: number
     public bounds: StringTMap<number>
-    public properties: Record<string, any>
+    public properties: StringTMap<any>
     public force: SAT.Vector = new Vector(0, 0)
     public expectedPos: SAT.Vector
     public initialPos: SAT.Vector
     public collisionMask: SAT.Box | SAT.Polygon
     public dead: boolean
     public collisionLayers: number[]
-    public onGround: boolean 
+    public onGround: boolean
     public shadowCaster: boolean
     public solid: boolean
     public visible: boolean
@@ -45,7 +46,7 @@ export class Entity {
     public light: any
     public sprite: Sprite
 
-    // public debugArray: any[]
+    public debugArray: any[]
 
     public collide: (obj: Entity, response: SAT.Response) => void
     public update: () => void
@@ -131,16 +132,16 @@ export class Entity {
     draw (ctx: CanvasRenderingContext2D): void {
         if (this.onScreen() && this.sprite && this.visible) {
             const { camera } = this.scene
-            
-            // const debug = this.scene.getProperty('debug')
-            // if (debug && this.debugArray) {
-            //     this.debugArray.map(({x, y, color}) => {
-            //         ctx.save()
-            //         ctx.fillStyle = color
-            //         ctx.fillRect((x * 16) + camera.x, (y * 16) + camera.y, 16, 16)
-            //         ctx.restore()
-            //     })
-            // }
+
+            const debug = this.scene.getProperty('debug')
+            if (debug && this.debugArray) {
+                this.debugArray.map(({ x, y, color }) => {
+                    ctx.save()
+                    ctx.fillStyle = color
+                    ctx.fillRect((x * 16) + camera.x, (y * 16) + camera.y, 16, 16)
+                    ctx.restore()
+                })
+            }
 
             this.sprite.draw(ctx,
                 Math.floor(this.x + camera.x),
@@ -164,13 +165,22 @@ export class Entity {
 
     move (): void {
         if (!this.force.x && !this.force.y) return
-        
+
         const { map: { tilewidth, tileheight } } = this.scene
-        // const debug = this.scene.getProperty('debug')
-        // this.debugArray = []
+
+        const debug = this.scene.getProperty('debug')
+        this.debugArray = []
         
         this.expectedPos = new Vector(this.x + this.force.x, this.y + this.force.y)
-        const PX = Math.ceil((this.expectedPos.x + this.bounds.x + 0.3) / tilewidth) - 1
+
+        const reducedForceY = Math.min(tileheight, this.force.y)
+
+        const offsetX = this.x + this.bounds.x
+        const offsetY = this.y + this.bounds.y
+        const nextX = { x: offsetX + this.force.x, y: offsetY, w: this.bounds.w, h: this.bounds.h }
+        const nextY = { x: offsetX, y: offsetY + reducedForceY, w: this.bounds.w, h: this.bounds.h }
+
+        const PX = Math.ceil((this.expectedPos.x + this.bounds.x) / tilewidth) - 1 
         const PY = Math.ceil((this.expectedPos.y + this.bounds.y) / tileheight) - 1
         const PW = Math.ceil((this.expectedPos.x + this.bounds.x + this.bounds.w) / tilewidth)
         const PH = Math.ceil((this.expectedPos.y + this.bounds.y + this.bounds.h) / tileheight)
@@ -182,22 +192,74 @@ export class Entity {
                     for (let y = PY; y < PH; y++) {
                         for (let x = PX; x < PW; x++) {
                             const tile = layer.getTile(x, y)
-                            // debug && this.debugArray.push({x, y, color: 'rgba(0,255,255,0.1)'})
+
+                            debug && this.debugArray.push({ x, y, color: 'rgba(0,255,255,0.1)' })
+
                             if (tile && tile.isSolid()) {
-                                // fix overlaping when force.y is too high
-                                this.force.y = Math.min(this.force.y, tileheight / 2)
-                                const overlap = tile.overlapTest(this, x, y)
-                                if (overlap) {
-                                    // debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
-                                    if (overlap.y && !(tile.isOneWay() && this.force.y < 0)) {
-                                        this.force.y += overlap.y
+                                if (tile.isCutomShape() && !(tile.isOneWay() && this.force.y < 0)) {
+                                    const overlap = tile.collide(
+                                        this.getTranslatedBounds(
+                                            this.x + this.force.x - (x * tilewidth),
+                                            this.y + this.force.y - (y * tileheight)
+                                        )
+                                    )
+                                    debug && this.debugArray.push({x, y, color: 'rgba(255,255,0,0.3)'})
+                                    nextY.y += overlap.y
+                                    nextX.x += overlap.x
+                                    this.force.x += overlap.x
+                                    this.force.y += overlap.y
+                                } 
+                                else {
+                                    const t = tile.getBounds(x, y)
+                                    if (boxOverlap(nextX, t) && Math.abs(this.force.x) > 0 && !tile.isOneWay()) {
+                                        debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
+                                        this.force.x = this.force.x < 0
+                                            ? t.x + tile.width - offsetX
+                                            : t.x - this.bounds.w - offsetX
                                     }
-                                    else if (!tile.isSlope() && !tile.isOneWay()) {
-                                        this.force.x += overlap.x
+                                    if (boxOverlap(nextY, t) && Math.abs(this.force.y) > 0) {
+                                        debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
+                                        if (!tile.isOneWay()) {
+                                            this.force.y = this.force.y < 0
+                                                ? t.y + tile.height - offsetY
+                                                : t.y - this.bounds.h - offsetY 
+                                        }
+                                        else if (tile.isOneWay() && this.y + this.height <= t.y) {
+                                            this.force.y = t.y - this.bounds.h - offsetY 
+                                        }
                                     }
                                 }
                             }
                         }
+
+
+
+
+                        // if (Math.abs(this.force.y) !== 0) {
+
+                        // const overlap = tile.overlapTest(
+                        //     this.getTranslatedBounds(
+                        //         this.x + this.force.x - (x * tilewidth),
+                        //         this.y + this.force.y - (y * tileheight)
+                        //     )
+                        // )
+                        // if (overlap) {
+                        //     debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
+                        //     if (Math.abs(overlap.overlapV.y) > 0 && !(tile.isOneWay() && this.force.y < 0)) {
+                        //         this.force.y += overlap.overlapV.y
+                        //     }
+                        //     if (Math.abs(overlap.overlapV.x) > 0 && !tile.isOneWay()) {
+                        //         if (!tile.isSlope()) {
+                        //             //if (this.y + this.bounds.y + this.bounds.h + this.force.y >= tileheight + (y * tileheight)) {
+                        //             debug && this.debugArray.push({x, y, color: 'rgba(255,255,0,1)'})
+                        //             console.info(overlap.overlapV.x)
+                        //             this.force.x += overlap.overlapV.x
+                        //             // }
+                        //         }
+                        //     }
+                        // }
+                        //}
+                        //}
                     }
                 }
             })

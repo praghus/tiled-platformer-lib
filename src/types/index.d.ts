@@ -29,9 +29,9 @@ declare namespace TPL {
         readonly id: number;
         readonly name: string;
         readonly data?: number[];
-        readonly properties?: Record<string, any>;
+        readonly properties?: StringTMap<any>;
         readonly objects?: TmxObject[];
-        readonly image?: Record<string, any>;
+        readonly image?: StringTMap<any>;
         readonly type: string;
         readonly width: number;
         readonly height: number;
@@ -46,7 +46,7 @@ declare namespace TPL {
         readonly nextlayerid: number;
         readonly nextobjectid: number;
         readonly orientation: string;
-        readonly properties: Record<string, any>;
+        readonly properties: StringTMap<any>;
         readonly renderorder: string;
         readonly tiledversion: string;
         readonly tileheight: number;
@@ -81,7 +81,7 @@ declare namespace TPL {
         readonly height: number;
         readonly id: number;
         readonly name: string;
-        readonly properties?: Record<string, any>;
+        readonly properties?: StringTMap<any>;
         readonly shape: string;
         readonly type: string;
         readonly width: number;
@@ -97,9 +97,24 @@ declare namespace TPL {
         scale: number;
     }
 
+    export interface AnimationStrip {
+        x: number; 
+        y: number;
+        frames: number; 
+        duration: number;
+    }
+
+    export interface Animation {
+        strip?: AnimationStrip;
+        frames?: [number[]];
+        width: number;
+        height: number;
+        loop: boolean;
+    }
+
     export interface EntityModel {
         asset?: string;
-        animations?: StringTMap<Record<string, any>>;
+        animations?: StringTMap<Animation>;
         collisionLayers?: number[];
         model: Constructable<Entity>;
         type: string;
@@ -127,12 +142,12 @@ declare namespace TPL {
     export class Tile {
         id: number;
         tileset: TmxTileset;
-        properties: Record<string, any>;
+        properties: StringTMap<any>;
         type: string;
         width: number;
         height: number;
         asset: HTMLImageElement;
-        animation: Record<string, any>;
+        animation: StringTMap<any>;
         animFrame: number;
         then: number;
         frameStart: number;
@@ -141,21 +156,24 @@ declare namespace TPL {
 
         constructor(x?: number, y?: number);
 
+        collide (polygon: SAT.Polygon): SAT.Vector
         draw(ctx: CanvasRenderingContext2D, x: number, y: number, scale?: number): void;
+        getBounds(x: number, y: number): Bounds;
         getCollisionMask(posX: number, posY: number): SAT.Polygon[];
         getNextGid(): number;
         getTerrain(): number[];
+        isCutomShape(): boolean;
         isSlope(): boolean;
         isSolid(): boolean;
         isOneWay(): boolean;
         isInvisible(): boolean;
         isShadowCaster(): boolean;
-        overlapTest(obj: Entity, x: number, y: number): any 
+        overlapTest(polygon: SAT.Polygon): any 
     }
 
     export class Sprite {
         animFrame: number;
-        animation: Record<string, any>;
+        animation: StringTMap<any>;
         asset: HTMLImageElement;
         tile: Tile;
         frameStart: number;
@@ -166,7 +184,7 @@ declare namespace TPL {
 
         constructor (props: StringTMap<any>, scene: Scene)
 
-        animate(animation: Record<string, any>): void;
+        animate(animation: StringTMap<any>): void;
         draw(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number): void;
     }
 
@@ -181,7 +199,7 @@ declare namespace TPL {
         gid: number;
         radius: number;
         bounds: StringTMap<number>;
-        properties: Record<string, any>;
+        properties: StringTMap<any>;
         force: SAT.Vector;
         expectedPos: SAT.Vector;
         initialPos: SAT.Vector;
@@ -220,7 +238,7 @@ declare namespace TPL {
         objects: any[];
         data: number[];
         type: string;
-        properties: Record<string, any>;
+        properties: StringTMap<any>;
         activeObjectsCount: number;
         width: number;
         height: number;
@@ -250,11 +268,12 @@ declare namespace TPL {
         lights: any[];
         lightmask: any[];
         timeoutsPool: StringTMap<any>;
-        properties: StringTMap<any>;
+        properties?: StringTMap<any>;
         sprites: StringTMap<Sprite>;
         tiles: StringTMap<Tile>;
         map: TmxMap;
         player: Entity;
+        viewport: Viewport;
         currentCameraId: number;
         shadowCastingLayerId: number;
         gravity: number;
@@ -266,8 +285,9 @@ declare namespace TPL {
         timer: number;
 
         constructor (
+            assets: StringTMap<HTMLImageElement>,
             viewport: Viewport,
-            props?: StringTMap<any>
+            properties?: StringTMap<any>
         )
 
         resize(viewport: Viewport): void;
@@ -275,7 +295,7 @@ declare namespace TPL {
         addPlayer(player: Entity, cameraFollow?: boolean): void;
         update(): void;
         draw(ctx: CanvasRenderingContext2D): void;
-        createSprite(id: string, props: Record<string, any>): Sprite;
+        createSprite(id: string, props: StringTMap<any>): Sprite;
         createTile(id: number): Tile;
         addLight(light: any): void;
         addLightMask(...args: any[]): void;
@@ -302,7 +322,6 @@ declare namespace TPL {
         putTile(x: number, y: number, tileId: number, layerId: number): void;
         clearTile(x: number, y: number, layerId: number): void;
         isSolidArea(x: number, y: number, layers: number[]): boolean;
-        setCameraViewport(viewObj: Entity): void;
         checkTimeout(name: string): any;
         startTimeout(name: string, duration: number, f: () => any): void;
         stopTimeout(name: string): void;

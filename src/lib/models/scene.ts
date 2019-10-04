@@ -8,14 +8,12 @@ import { Sprite } from './sprite'
 import { Tile } from './tile'
 
 export class Scene implements Scene {
-    public assets: StringTMap<HTMLImageElement> = {}
     public camera: Camera
     public entities: EntityModel[] = []
     public layers: Layer[] = []
     public lights: any[] = []
     public lightmask: any[] = []
     public timeoutsPool: StringTMap<any> = {}
-    public properties: StringTMap<any> = {}
     public sprites: StringTMap<Sprite> = {}
     public tiles: StringTMap<Tile> = {}
     public map: TmxMap
@@ -31,14 +29,10 @@ export class Scene implements Scene {
     public timer: number
 
     constructor ( 
-        viewport: Viewport,
-        props?: StringTMap<any>
+        public assets: StringTMap<HTMLImageElement>,
+        public viewport: Viewport,
+        public properties?: StringTMap<any>
     ) {
-        if (props && Object.keys(props).length > 0) {
-            Object.keys(props).map((k) => {
-                this[k] = props[k]
-            })
-        }
         this.resize(viewport)
         this.camera = new Camera(this)
     }
@@ -51,6 +45,7 @@ export class Scene implements Scene {
     }
 
     resize (viewport: Viewport): void {
+        this.viewport = viewport
         this.width = viewport.width
         this.height = viewport.height
         this.scale = viewport.scale || 1
@@ -92,7 +87,7 @@ export class Scene implements Scene {
         ctx.restore()
     }
 
-    createSprite (id: string, props: Record<string, any>): Sprite {
+    createSprite (id: string, props: StringTMap<any>): Sprite {
         if (!this.sprites[id]) {
             this.sprites[id] = new Sprite(props, this)
         }
@@ -218,14 +213,6 @@ export class Scene implements Scene {
             const tile = this.getTile(x, y, layerId)
             return tile && tile.isSolid()
         }).find((isTrue) => !!isTrue)
-    }
-
-    setCameraViewport (viewObj: Entity): void {
-        const { id, x, y, width, height } = viewObj
-        if (this.currentCameraId !== id) {
-            this.camera.setBounds(x, y, width, height)
-            this.currentCameraId = id
-        }
     }
 
     checkTimeout (name: string): any {

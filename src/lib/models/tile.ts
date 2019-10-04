@@ -1,4 +1,4 @@
-import { TmxTileset, Entity, Scene, StringTMap } from 'tiled-platformer-lib'
+import { Bounds, TmxTileset, Scene, StringTMap } from 'tiled-platformer-lib'
 import {
     testPolygonPolygon,
     Box,
@@ -47,17 +47,32 @@ export class Tile {
         this.collisionMask = this.getCollisionMask()
     }
 
-    overlapTest (obj: Entity, x: number, y: number): any {
-        const polygon = obj.getTranslatedBounds(
-            (obj.x + obj.force.x) - (x * this.width),
-            (obj.y + obj.force.y) - (y * this.height)
-        )
+    overlapTest (polygon: SAT.Polygon): SAT.Response {
         const response = new Response()
         const hasCollision = this.collisionMask.some(
             (shape) => testPolygonPolygon(shape, polygon, response)
         )
         response.clear()
-        return hasCollision && response.overlapV
+        return hasCollision && response
+    }
+
+    collide (polygon: SAT.Polygon): SAT.Vector {
+        const overlap = this.overlapTest(polygon)
+        let x: number, y: number
+        if (overlap) {
+            x = this.isSlope() ? 0 : overlap.overlapV.x
+            y = overlap.overlapV.y
+        }
+        return new Vector(x, y)
+    }
+
+    getBounds (x: number, y: number): Bounds {
+        return {
+            x: x * this.width,
+            y: y * this.height,
+            w: this.width,
+            h: this.height
+        }
     }
 
     getTerrain (): number[] {
@@ -92,6 +107,10 @@ export class Tile {
                     : new Box(new Vector(posX + x, posY + y), width, height).toPolygon()
             )
             : [new Box(new Vector(posX, posY), this.width, this.height).toPolygon()]
+    }
+
+    isCutomShape (): boolean {
+        return getProperties(this, 'objects')
     }
 
     isSlope (): boolean {
