@@ -165,16 +165,11 @@ export class Entity {
     move (): void {
         if (!this.force.x && !this.force.y) return
         
-        const { map: { width, height, tilewidth, tileheight } } = this.scene
-        //const debug = this.scene.getProperty('debug')
+        const { map: { tilewidth, tileheight } } = this.scene
+        // const debug = this.scene.getProperty('debug')
+        // this.debugArray = []
         
         this.expectedPos = new Vector(this.x + this.force.x, this.y + this.force.y)
-        //this.debugArray = []
-
-        if (this.expectedPos.x < 0 || this.expectedPos.x + this.width > width * tileheight) this.force.x = 0
-        if (this.expectedPos.y + this.height < 0 || this.expectedPos.y > height * tileheight) this.force.y = 0
-
-        // small hacks to prevent the object from getting jammed :/
         const PX = Math.ceil((this.expectedPos.x + this.bounds.x + 0.3) / tilewidth) - 1
         const PY = Math.ceil((this.expectedPos.y + this.bounds.y) / tileheight) - 1
         const PW = Math.ceil((this.expectedPos.x + this.bounds.x + this.bounds.w) / tilewidth)
@@ -207,7 +202,6 @@ export class Entity {
                 }
             })
         }
-
         this.x += this.force.x
         this.y += this.force.y
         this.onGround = this.y < this.expectedPos.y
@@ -239,12 +233,6 @@ export class Entity {
             shadows.push(createDiscObject(x, y, this.width / 2))
         }
         else {
-            // if (this.gid) {
-            //     const tile = scene.createTile(this.gid)
-            //     tile.collisionLayer.map(({points}) => {
-            //         shadows.push(createPolygonObject(x, y, points))
-            //     })
-            // }
             const { pos, points } = this.getTranslatedBounds(x, y)
             shadows.push(createPolygonObject(pos.x, pos.y, points))
         }

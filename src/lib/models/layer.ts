@@ -10,7 +10,7 @@ export class Layer {
     public properties: Record<string, any> = {}
     public activeObjectsCount: number
     public width: number
-    public height: number 
+    public height: number
     public visible: number
     public data: number[] = []
     public objects: any[] = []

@@ -11,6 +11,13 @@ declare namespace TPL {
         new(...args: any[]): T;
     }
 
+    export interface Bounds {
+        x: number; 
+        y: number; 
+        w: number; 
+        h: number;
+    }
+
     // @todo: move to @tmx-tiledmap/types
     export interface TmxFlip {
         readonly H: boolean;
@@ -109,7 +116,7 @@ declare namespace TPL {
 
         center(): void;
         getBounds(): SAT.Box;
-        setBounds(x: number, y: number, width: number, height: number): void;
+        setBounds(x: number, y: number, w: number, h: number): void;
         setDefaultMiddlePoint(): void;
         setFollow(follow: Entity, center?: boolean): void;
         setMiddlePoint(x: number, y: number): void;

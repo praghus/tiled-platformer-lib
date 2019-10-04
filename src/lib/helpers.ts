@@ -1,5 +1,5 @@
 import { Light, Point, Circle, Polygon } from 'lucendi'
-import { Entity, TmxTileset, StringTMap } from 'tiled-platformer-lib'
+import { Bounds, TmxTileset, StringTMap } from 'tiled-platformer-lib'
 
 export const noop = (): void => {}
 
@@ -7,7 +7,7 @@ export const random = (min: number, max: number): number => min + (Math.random()
 
 export const randomInt = (min: number, max: number): number => Math.round(random(min, max))
 
-export const overlap = (a: Entity, b: Entity) => a.x < b.x + b.width &&  a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
+export const boxOverlap = (a: Bounds, b: Bounds) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 
 export const isValidArray = (arr: any): boolean => !!(arr && arr.length)
 

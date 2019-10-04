@@ -31,8 +31,8 @@ export class Camera {
         return this.bounds
     }
 
-    setBounds (x: number, y: number, width: number, height: number): void {
-        this.bounds = new Box(new Vector(x, y), width, height)
+    setBounds (x: number, y: number, w: number, h: number): void {
+        this.bounds = new Box(new Vector(x, y), w, h)
         this.center()
     }
 

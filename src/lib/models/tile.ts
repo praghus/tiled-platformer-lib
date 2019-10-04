@@ -1,4 +1,4 @@
-import { TmxTileset, Entity, Scene } from 'tiled-platformer-lib'
+import { TmxTileset, Entity, Scene, StringTMap } from 'tiled-platformer-lib'
 import {
     testPolygonPolygon,
     Box,
@@ -17,19 +17,19 @@ import {
 import { TILE_TYPE } from '../constants'
 
 export class Tile {
-    public id: number;
-    public tileset: TmxTileset;
-    public properties: Record<string, any>;
-    public type: string;
-    public width: number;
-    public height: number;
-    public asset: HTMLImageElement;
-    public animation: Record<string, any>;
-    public animFrame: number;
-    public then: number;
-    public frameStart: number;
-    public terrain: number[];
-    public collisionMask: SAT.Polygon[]; 
+    public id: number
+    public tileset: TmxTileset
+    public properties: StringTMap<any>
+    public type: string
+    public width: number
+    public height: number
+    public asset: HTMLImageElement
+    public animation: StringTMap<any>
+    public animFrame: number
+    public then: number
+    public frameStart: number
+    public terrain: number[]
+    public collisionMask: SAT.Polygon[]
 
     constructor (id: number, scene: Scene) {
         this.id = id
@@ -50,7 +50,7 @@ export class Tile {
     overlapTest (obj: Entity, x: number, y: number): any {
         const polygon = obj.getTranslatedBounds(
             (obj.x + obj.force.x) - (x * this.width),
-            (obj.y + obj.force.y) - (y *  this.height)
+            (obj.y + obj.force.y) - (y * this.height)
         )
         const response = new Response()
         const hasCollision = this.collisionMask.some(
@@ -58,26 +58,6 @@ export class Tile {
         )
         response.clear()
         return hasCollision && response.overlapV
-    }
-
-    isSlope (): boolean {
-        return this.type === TILE_TYPE.SLOPE
-    }
-
-    isSolid (): boolean {
-        return this.type !== TILE_TYPE.NON_COLLIDING
-    }
-
-    isOneWay (): boolean {
-        return this.type === TILE_TYPE.ONE_WAY
-    }
-
-    isInvisible (): boolean {
-        return this.type === TILE_TYPE.INVISIBLE
-    }
-
-    isShadowCaster (): boolean {
-        return this.isSolid() && !this.isOneWay()
     }
 
     getTerrain (): number[] {
@@ -114,18 +94,29 @@ export class Tile {
             : [new Box(new Vector(posX, posY), this.width, this.height).toPolygon()]
     }
 
+    isSlope (): boolean {
+        return this.type === TILE_TYPE.SLOPE
+    }
+
+    isSolid (): boolean {
+        return this.type !== TILE_TYPE.NON_COLLIDING
+    }
+
+    isOneWay (): boolean {
+        return this.type === TILE_TYPE.ONE_WAY
+    }
+
+    isInvisible (): boolean {
+        return this.type === TILE_TYPE.INVISIBLE
+    }
+
+    isShadowCaster (): boolean {
+        return this.isSolid() && !this.isOneWay()
+    }
+
     draw (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1): void {
         if (!this.isInvisible()) {
-            const {
-                asset,
-                tileset: {
-                    columns,
-                    firstgid,
-                    tilewidth,
-                    tileheight
-                }
-            } = this
-
+            const { asset, tileset: { columns, firstgid, tilewidth, tileheight } } = this
             const tileGid = this.getNextGid()
             const posX = ((tileGid - firstgid) % columns) * tilewidth
             const posY = (Math.ceil(((tileGid - firstgid) + 1) / columns) - 1) * tileheight
