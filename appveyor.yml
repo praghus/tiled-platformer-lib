@@ -14,10 +14,5 @@ install:
   - npm --version
   - npm install
 
-test_script:
-  - npm test
-  - npm run cov:send
-  - npm run cov:check
-
 build: off
 deploy: off
