@@ -1,5 +1,5 @@
-import { Scene, TmxLayer, TmxObject, Tile, StringTMap } from 'tiled-platformer-lib'
-import { createPolygonObject, isValidArray } from '../helpers'
+import { Scene, TmxLayer, StringTMap, Input } from 'tiled-platformer-lib'
+import { isValidArray } from '../helpers'
 import { NODE_TYPE } from '../constants'
 import { Entity } from './entity'
 
@@ -15,7 +15,7 @@ export class Layer {
     public data: number[] = []
     public objects: any[] = []
 
-    constructor (public scene: Scene, layerData?: TmxLayer) {
+    constructor (layerData?: TmxLayer) {
         if (layerData) {
             this.id = layerData.id
             this.name = layerData.name || ''
@@ -24,14 +24,7 @@ export class Layer {
             this.properties = layerData.properties
             this.width = layerData.width
             this.height = layerData.height
-
-            if (layerData.data) {
-                this.data = layerData.data
-                this.data.map((gid) => gid > 0 && this.scene.createTile(gid))
-            }
-            else if (layerData.objects) {
-                layerData.objects.map((obj) => this.addObject(obj))
-            }
+            this.data = layerData.data
         }
     }
 
@@ -39,122 +32,36 @@ export class Layer {
         return this.objects
     }
 
-    update (): void {
+    // time, scene
+    update (scene: Scene, input: Input, time: number): void {
         if (isValidArray(this.objects)) {
             this.activeObjectsCount = 0
-            this.objects.map((obj) => {
-                if (obj.onScreen()) {
-                    this.objects.map((activeObj) => activeObj.id !== obj.id && activeObj.overlapTest(obj))
-
-                    if (obj.light && obj.visible) this.scene.addLight(obj.getLight())
-                    if (obj.shadowCaster && obj.visible) this.scene.addLightMask(...obj.getLightMask())
-
-                    obj.update && obj.update()
+            for (const obj of this.objects) {
+                if (scene.onScreen(obj)) {
+                    this.objects.forEach(
+                        (activeObj) => activeObj.id !== obj.id && activeObj.overlapTest(obj, scene)
+                    )
+                    obj.update && obj.update(scene, input, time)
                     obj.dead && this.removeObject(obj)
                     this.activeObjectsCount++
                 }
-            })
+            }
         }
     }
 
-    draw (ctx: CanvasRenderingContext2D): void {
+    // ctx, camera
+    draw (ctx: CanvasRenderingContext2D, scene: Scene): void {
         if (this.visible) {
             switch (this.type) {
             case NODE_TYPE.LAYER:
-                this.renderTileLayer(ctx)
+                scene.forEachVisibleTile(this.id, (tile, x, y) => tile && tile.draw(ctx, x, y))
                 break
             case NODE_TYPE.OBJECT_GROUP:
-                this.objects.map((obj) => obj.draw(ctx))
+                scene.forEachVisibleObject(this.id, (obj) => obj.draw(ctx, scene))
                 break
             }
             // @todo: handle image layer
         }
-    }
-
-    renderTileLayer (ctx: CanvasRenderingContext2D): void {
-        const {
-            camera,
-            resolutionX,
-            resolutionY,
-            map: {
-                tilewidth,
-                tileheight
-            }
-        } = this.scene
-
-        let y = Math.floor(camera.y % tileheight)
-        let _y = Math.floor(-camera.y / tileheight)
-
-        while (y < resolutionY) {
-            let x = Math.floor(camera.x % tilewidth)
-            let _x = Math.floor(-camera.x / tilewidth)
-            while (x < resolutionX) {
-                const tile = this.getTile(_x, _y)
-                if (tile) {
-                    // create shadow casters if necessary
-                    if (this.id === this.scene.shadowCastingLayerId && tile.isShadowCaster()) {
-                        tile.collisionMask.map(({ points }) => this.scene.addLightMask(
-                            createPolygonObject(x, y, points)
-                        ))
-                    }
-                    tile.draw(ctx, x, y + (tileheight - tile.height))
-                }
-                x += tilewidth
-                _x++
-            }
-            y += tileheight
-            _y++
-        }
-    }
-
-    getTile (x: number, y: number): Tile {
-        if (this.isInRange(x, y)) {
-            const gid = this.data[x + this.width * y]
-            return this.scene.getTileObject(gid)
-        }
-        return null
-    }
-
-    putTile (x: number, y: number, tileId: number): void {
-        if (this.isInRange(x, y)) {
-            this.scene.createTile(tileId)
-            this.data[x + this.width * y] = tileId
-        }
-    }
-
-    clearTile (x: number, y: number): void {
-        if (this.isInRange(x, y)) {
-            this.data[x + this.width * y] = null
-        }
-    }
-
-    addObject (obj: TmxObject, index = null): void {
-        const { entities } = this.scene
-        try {
-            const entity = isValidArray(entities) && entities.find(
-                ({ type }) => type === obj.type
-            )
-            if (entity) {
-                const Entity = entity.model
-                const newModel = new Entity(
-                    { layerId: this.id, ...obj, ...entity }, this.scene
-                )
-                index !== null
-                    ? this.objects.splice(index, 0, newModel)
-                    : this.objects.push(newModel)
-            }
-        }
-        catch (e) {
-            throw (e)
-        }
-    }
-
-    removeObject (obj: Entity): void {
-        this.objects.splice(this.objects.indexOf(obj), 1)
-    }
-
-    toggleVisibility (toggle: number): void {
-        this.visible = toggle
     }
 
     isInRange (x: number, y: number): boolean {
@@ -164,5 +71,35 @@ export class Layer {
             x < this.width &&
             y < this.height
         )
+    }
+
+    get (x: number, y: number): number {
+        return this.isInRange(x, y) && this.data[x + this.width * y] 
+    }
+
+    put (x: number, y: number, tileId: number): void {
+        if (this.isInRange(x, y)) {
+            this.data[x + this.width * y] = tileId
+        }
+    }
+
+    clear (x: number, y: number): void {
+        if (this.isInRange(x, y)) {
+            this.data[x + this.width * y] = null
+        }
+    }
+
+    addObject (obj: Entity, index = null): void {
+        index !== null
+            ? this.objects.splice(index, 0, obj)
+            : this.objects.push(obj)
+    }
+
+    removeObject (obj: Entity): void {
+        this.objects.splice(this.objects.indexOf(obj), 1)
+    }
+
+    toggleVisibility (toggle: number): void {
+        this.visible = toggle
     }
 }

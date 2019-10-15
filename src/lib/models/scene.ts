@@ -1,9 +1,8 @@
-import { EntityModel, TmxMap, Viewport, Constructable, TmxObject, TmxTileset, StringTMap } from 'tiled-platformer-lib'
-import { isValidArray, noop } from '../helpers'
+import { EntityModel, TmxMap, Viewport, Constructable, TmxObject, TmxTileset, StringTMap, TmxLayer, Input } from 'tiled-platformer-lib'
+import { getFilename, isValidArray, noop } from '../helpers'
 import { Camera } from './camera'
 import { Entity } from './entity'
 import { Layer } from './layer'
-import { LightLayer } from './light-layer'
 import { Sprite } from './sprite'
 import { Tile } from './tile'
 
@@ -11,16 +10,11 @@ export class Scene implements Scene {
     public camera: Camera
     public entities: EntityModel[] = []
     public layers: Layer[] = []
-    public lights: any[] = []
-    public lightmask: any[] = []
-    public timeoutsPool: StringTMap<any> = {}
-    public sprites: StringTMap<Sprite> = {}
     public tiles: StringTMap<Tile> = {}
     public map: TmxMap
     public player: Entity
     public currentCameraId: number
     public shadowCastingLayerId: number
-    public gravity: number
     public width: number
     public height: number
     public resolutionX: number
@@ -33,36 +27,28 @@ export class Scene implements Scene {
         public viewport: Viewport,
         public properties?: StringTMap<any>
     ) {
+        this.camera = new Camera(viewport)
+        this.getProperty = this.getProperty.bind(this)
+        this.setProperty = this.setProperty.bind(this)
         this.resize(viewport)
-        this.camera = new Camera(this)
     }
 
-    private _clear (): void {
-        delete (this.lightmask)
-        delete (this.lights)
-        this.lightmask = []
-        this.lights = []
-    }
+    // Add input handling
 
     resize (viewport: Viewport): void {
-        this.viewport = viewport
         this.width = viewport.width
         this.height = viewport.height
         this.scale = viewport.scale || 1
         this.resolutionX = Math.round(this.width / this.scale)
         this.resolutionY = Math.round(this.height / this.scale)
-    }
-
-    addAssets (assets: StringTMap<HTMLImageElement>) {
-        this.assets = assets
+        this.camera.resize(viewport)
     }
 
     addTmxMap (data: TmxMap, entities: EntityModel[]): void {
-        this.entities = entities
         this.map = data
-        data.layers.map(
-            (layerData) => this.layers.push(new Layer(this, layerData))
-        )
+        this.entities = entities
+        this.camera.setBounds(0, 0, data.width * data.tilewidth, data.height * data.tileheight)
+        data.layers.map((layerData) => this.createTmxLayer(layerData))
     }
 
     addPlayer (player: Entity, cameraFollow = true): void {
@@ -70,11 +56,12 @@ export class Scene implements Scene {
         cameraFollow && this.camera.setFollow(this.player)
     }
 
-    update (): void {
-        if (!this.timer) this.timer = new Date().valueOf()
-        this._clear()
+    update (input: Input, time: number): void {
+        for (const layer of this.layers) {
+            layer instanceof Layer && layer.update(this, input, time)
+        }
         this.camera.update()
-        this.layers.map((layer) => layer instanceof Layer && layer.update())
+        if (!this.timer) this.timer = new Date().valueOf()
     }
 
     draw (ctx: CanvasRenderingContext2D): void {
@@ -83,43 +70,74 @@ export class Scene implements Scene {
         ctx.save()
         ctx.scale(scale, scale)
         ctx.clearRect(0, 0, resolutionX, resolutionY)
-        this.layers.map((layer) => layer instanceof Layer && layer.draw(ctx))
+        for (const layer of this.layers) {
+            layer instanceof Layer && layer.draw(ctx, this)
+        }
         ctx.restore()
     }
 
-    createSprite (id: string, props: StringTMap<any>): Sprite {
-        if (!this.sprites[id]) {
-            this.sprites[id] = new Sprite(props, this)
+    onScreen (object: Entity): boolean {
+        if (object.attached) return true
+        const {
+            camera,
+            resolutionX,
+            resolutionY,
+            map: {
+                tilewidth,
+                tileheight
+            }
+        } = this
+
+        const { bounds, radius } = object
+        const { x, y, w, h } = bounds
+
+        if (radius) {
+            const cx = object.x + x + w / 2
+            const cy = object.y + y + h / 2
+            return (
+                cx + radius > -camera.x &&
+                cy + radius > -camera.y &&
+                cx - radius < -camera.x + resolutionX &&
+                cy - radius < -camera.y + resolutionY
+            )
         }
-        return this.sprites[id]
+        else {
+            const cx = object.x + x
+            const cy = object.y + y
+            return (
+                cx + w + tilewidth > -camera.x &&
+                cy + h + tileheight > -camera.y &&
+                cx - tilewidth < -camera.x + resolutionX &&
+                cy - tileheight < -camera.y + resolutionY
+            )
+        }
+    }
+
+    createSprite (id: string, width: number, height: number): Sprite {
+        return new Sprite(id, this.assets[id], width, height)
     }
 
     createTile (id: number): Tile {
         if (!this.tiles[id]) {
-            this.tiles[id] = new Tile(id, this)
+            const tileset = this.getTileset(id)
+            const asset = this.assets[getFilename(tileset.image.source)]
+            this.tiles[id] = new Tile(id, asset, tileset)
         }
         return this.tiles[id]
     }
 
-    addLight (light: any): void {
-        this.lights.push(light)
+    clearTile (x: number, y: number, layerId: number): void {
+        this.getLayer(layerId).clear(x, y)
     }
 
-    addLightMask (lightMask: any): void {
-        this.lightmask.push(lightMask)
-    }
-
-    setProperty (name: string, value: any): void {
-        this.properties[name] = value
-    }
-
-    getProperty (name: string): any {
-        return this.properties[name] || null
-    }
-
-    createShadowCastingLayer (layerId: number, index: number): void {
-        this.shadowCastingLayerId = layerId
-        this.addLayer(new LightLayer(this), index)
+    createTmxLayer (tmxLayer: TmxLayer): void {
+        this.layers.push(new Layer(tmxLayer))
+        if (tmxLayer.data) {
+            tmxLayer.data.forEach((gid) => gid > 0 && this.createTile(gid))
+        }
+        else if (tmxLayer.objects) {
+            tmxLayer.objects.forEach((obj) => this.addObject(obj, tmxLayer.id))
+        }
     }
 
     createCustomLayer (Layer: Constructable<Layer>, index: number): void {
@@ -127,12 +145,28 @@ export class Scene implements Scene {
         this.addLayer(newLayer, index)
     }
 
-    setGravity (gravity: number): void {
-        this.gravity = gravity
+    setProperty (name: string, value: any): void {
+        this.properties[name] = value
     }
 
-    addObject (obj: TmxObject, layerId: number, index: number): void {
-        this.getLayer(layerId).addObject(obj, index)
+    getProperty (name: string): any {
+        return this.properties[name]
+    }
+
+    addObject (obj: TmxObject, layerId: number, index?: number): void {
+        const entity = isValidArray(this.entities) && this.entities.find(
+            ({ type }) => type === obj.type
+        )
+        if (entity) {
+            const Entity = entity.model
+            const sprite = entity.aid || obj.gid 
+                ? obj.gid
+                    ? this.createTile(obj.gid)
+                    : this.createSprite(entity.aid, obj.width, obj.height)
+                : null
+            const newModel = new Entity({ layerId, ...obj, ...entity }, sprite)
+            this.getLayer(layerId).addObject(newModel, index)
+        }
     }
 
     addLayer (layer: Layer, index?: number): void {
@@ -193,7 +227,8 @@ export class Scene implements Scene {
     }
 
     getTile (x: number, y: number, layerId: number): Tile {
-        return this.getLayer(layerId).getTile(x, y)
+        const tileId = this.getLayer(layerId).get(x, y)
+        return this.getTileObject(tileId)
     }
 
     getTileObject (gid: number): Tile {
@@ -201,11 +236,8 @@ export class Scene implements Scene {
     }
 
     putTile (x: number, y: number, tileId: number, layerId: number): void {
-        this.getLayer(layerId).putTile(x, y, tileId)
-    }
-
-    clearTile (x: number, y: number, layerId: number): void {
-        this.getLayer(layerId).clearTile(x, y)
+        this.createTile(tileId)
+        this.getLayer(layerId).put(x, y, tileId)
     }
 
     isSolidArea (x: number, y: number, layers: number[]): boolean {
@@ -215,23 +247,30 @@ export class Scene implements Scene {
         }).find((isTrue) => !!isTrue)
     }
 
-    checkTimeout (name: string): any {
-        return this.timeoutsPool[name] || null
-    }
-
-    startTimeout (name: string, duration: number, f = noop): void {
-        if (!this.timeoutsPool[name]) {
-            this.timeoutsPool[name] = setTimeout(() => {
-                this.stopTimeout(name)
-                f()
-            }, duration)
+    forEachVisibleObject (layerId: number, fn: (obj: Entity) => void = noop): void {
+        for (const obj of this.getLayer(layerId).objects) {
+            obj.visible && this.onScreen(obj) && fn(obj)
         }
     }
 
-    stopTimeout (name: string): void {
-        if (this.timeoutsPool[name] !== null) {
-            clearTimeout(this.timeoutsPool[name])
-            this.timeoutsPool[name] = null
+    forEachVisibleTile (layerId: number, fn: (tile: Tile, x: number, y: number) => void = noop): void {
+        const { 
+            camera, resolutionX, resolutionY, 
+            map: { tilewidth, tileheight } 
+        } = this
+        let y = Math.floor(camera.y % tileheight)
+        let _y = Math.floor(-camera.y / tileheight)
+        while (y < resolutionY) {
+            let x = Math.floor(camera.x % tilewidth)
+            let _x = Math.floor(-camera.x / tilewidth)
+            while (x < resolutionX) {
+                const tileId = this.getLayer(layerId).get(_x, _y)
+                tileId && fn(this.getTileObject(tileId), x, y)
+                x += tilewidth
+                _x++
+            }
+            y += tileheight
+            _y++
         }
     }
 }

@@ -1,4 +1,3 @@
-import { Light, Point, Circle, Polygon } from 'lucendi'
 import { Bounds, TmxTileset, StringTMap } from 'tiled-platformer-lib'
 
 export const noop = (): void => {}
@@ -58,22 +57,4 @@ export function calculatePolygonBounds (points: [number[]]): StringTMap<number> 
         w: maxX + Math.abs(offsetX),
         h: maxY + Math.abs(offsetY)
     }
-}
-
-export function createPolygonObject (x, y, points) {
-    return new Polygon({points: points.map((v) => new Point(v.x + x, v.y + y))})
-}
-
-export function createDiscObject (x, y, radius) {
-    return new Circle({center: new Point(x + radius, y + radius), radius})
-}
-
-export function createLightSource (x, y, distance, color, radius = 8) {
-    return new Light({
-        color,
-        distance,
-        radius,
-        samples: 1,
-        position: new Point(x, y)
-    })
 }

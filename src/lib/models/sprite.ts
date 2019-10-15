@@ -1,28 +1,18 @@
-import { Tile, Scene, StringTMap } from 'tiled-platformer-lib'
+import { Animation, Drawable } from 'tiled-platformer-lib'
 import { getPerformance, isValidArray, normalize } from '../helpers'
 
-export class Sprite {
-    public gid: number
-    public width: number
-    public height: number
+export class Sprite implements Drawable {
+    public animation: Animation
     public animFrame = 0
-    public animation: StringTMap<any>
-    public asset: HTMLImageElement
-    public tile: Tile
-    public then: number
-    public frameStart: number 
+    public then = getPerformance()
+    public frameStart = getPerformance()
 
-    constructor (props: StringTMap<any>, scene: Scene) {
-        this.gid = props.gid
-        this.asset = scene.assets[props.aid]
-        this.tile = this.gid && scene.createTile(this.gid)
-        this.height = props.height
-        this.width = props.width
-        this.animation = props.animation
-        this.animFrame = 0
-        this.then = getPerformance()
-        this.frameStart = getPerformance()
-    }
+    constructor (
+        public id: string, 
+        public asset: HTMLImageElement, 
+        public width: number,
+        public height: number
+    ) {}
 
     animate (animation = this.animation): void {
         this.animFrame = this.animFrame || 0
@@ -52,12 +42,9 @@ export class Sprite {
         }
     }
 
-    draw (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1) {
-        const { asset, animation, animFrame, tile, width, height } = this
-        if (tile) {
-            tile.draw(ctx, x, y, scale)
-        }
-        else if (animation) {
+    draw (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1): void {
+        const { asset, animation, animFrame, width, height } = this
+        if (animation) {
             const { frames, strip } = animation
             const posX = strip
                 ? strip.x + animFrame * animation.width

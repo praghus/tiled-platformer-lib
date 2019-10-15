@@ -1,4 +1,5 @@
-import { Bounds, TmxTileset, Scene, StringTMap } from 'tiled-platformer-lib'
+import { Bounds, Drawable, TmxTileset, StringTMap } from 'tiled-platformer-lib'
+import { TILE_TYPE } from '../constants'
 import {
     testPolygonPolygon,
     Box,
@@ -7,42 +8,33 @@ import {
     Vector
 } from 'sat'
 import {
-    getFilename,
     getPerformance,
     getProperties,
     getTileProperties,
     isValidArray,
     normalize
 } from '../helpers'
-import { TILE_TYPE } from '../constants'
 
-export class Tile {
-    public id: number
-    public tileset: TmxTileset
+export class Tile implements Drawable {
     public properties: StringTMap<any>
     public type: string
     public width: number
     public height: number
-    public asset: HTMLImageElement
-    public animation: StringTMap<any>
-    public animFrame: number
-    public then: number
-    public frameStart: number
+    public animFrame = 0
+    public then = getPerformance()
+    public frameStart = getPerformance()
     public terrain: number[]
     public collisionMask: SAT.Polygon[]
 
-    constructor (id: number, scene: Scene) {
-        this.id = id
-        this.tileset = scene.getTileset(id)
+    constructor (
+        public id: number, 
+        public asset: HTMLImageElement, 
+        public tileset: TmxTileset
+    ) {
         this.properties = getTileProperties(id, this.tileset)
         this.type = this.properties && this.properties.type || null
         this.width = this.tileset.tilewidth
         this.height = this.tileset.tileheight
-        this.asset = scene.assets[getFilename(this.tileset.image.source)]
-        this.animation = this.properties && this.properties.animation
-        this.animFrame = 0
-        this.then = getPerformance()
-        this.frameStart = getPerformance()
         this.terrain = this.getTerrain()
         this.collisionMask = this.getCollisionMask()
     }
@@ -60,7 +52,7 @@ export class Tile {
         const overlap = this.overlapTest(polygon)
         let x: number, y: number
         if (overlap) {
-            x = this.isSlope() ? 0 : overlap.overlapV.x
+            x = this.isSlope() || this.isOneWay() ? 0 : overlap.overlapV.x
             y = overlap.overlapV.y
         }
         return new Vector(x, y)
@@ -82,16 +74,16 @@ export class Tile {
 
     getNextGid (): number {
         const { tileset: { firstgid } } = this
-        if (this.animation && this.animation.frames) {
+        if (this.properties && this.properties.animation) {
             this.frameStart = getPerformance()
-            const duration = this.animation.frames[this.animFrame].duration
-            if (this.frameStart - this.then > duration) {
-                if (this.animFrame <= this.animation.frames.length) {
-                    this.animFrame = normalize(this.animFrame + 1, 0, this.animation.frames.length)
+            const { frames } = this.properties.animation
+            if (this.frameStart - this.then > frames[this.animFrame].duration) {
+                if (this.animFrame <= frames.length) {
+                    this.animFrame = normalize(this.animFrame + 1, 0, frames.length)
                 }
                 this.then = getPerformance()
             }
-            return this.animation.frames[this.animFrame].tileid + firstgid
+            return frames[this.animFrame].tileid + firstgid
         }
         else return this.id
     }
@@ -129,17 +121,13 @@ export class Tile {
         return this.type === TILE_TYPE.INVISIBLE
     }
 
-    isShadowCaster (): boolean {
-        return this.isSolid() && !this.isOneWay()
-    }
-
     draw (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1): void {
         if (!this.isInvisible()) {
             const { asset, tileset: { columns, firstgid, tilewidth, tileheight } } = this
             const tileGid = this.getNextGid()
             const posX = ((tileGid - firstgid) % columns) * tilewidth
             const posY = (Math.ceil(((tileGid - firstgid) + 1) / columns) - 1) * tileheight
-
+            //y = (tileheight - tile.height)
             ctx.drawImage(asset,
                 posX, posY, tilewidth, tileheight,
                 x, y, tilewidth * scale, tileheight * scale

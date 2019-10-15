@@ -1,7 +1,5 @@
-import { TmxObject, Scene, StringTMap } from 'tiled-platformer-lib'
+import { TmxObject, Scene, StringTMap, Drawable } from 'tiled-platformer-lib'
 import { NODE_TYPE } from '../constants'
-import { Sprite } from './sprite'
-import { Point } from 'lucendi'
 import {
     Box,
     Polygon,
@@ -12,15 +10,11 @@ import {
 import {
     boxOverlap,
     calculatePolygonBounds,
-    createDiscObject,
-    createPolygonObject,
     isValidArray
 } from '../helpers'
 
-
 export class Entity {
     public id: number
-    // @todo: replace x, y with SAT.Vector pos
     public x: number
     public y: number
     public width: number
@@ -35,8 +29,9 @@ export class Entity {
     public expectedPos: SAT.Vector
     public initialPos: SAT.Vector
     public collisionMask: SAT.Box | SAT.Polygon
-    public dead: boolean
     public collisionLayers: number[]
+    public dead: boolean
+    public attached: boolean
     public onGround: boolean
     public shadowCaster: boolean
     public solid: boolean
@@ -44,31 +39,19 @@ export class Entity {
     public shape: string
     public points: [number[]]
     public light: any
-    public sprite: Sprite
+   
 
-    public debugArray: any[]
+    public collide: (obj: Entity, scene: Scene, response: SAT.Response) => void
+    // public update: (scene: Scene, time: number) => void
 
-    public collide: (obj: Entity, response: SAT.Response) => void
-    public update: () => void
-
-    constructor (obj: TmxObject, public scene: Scene) {
+    constructor (obj: TmxObject, public sprite: Drawable) {
         this.initialPos = new Vector(obj.x, obj.y)
-        Object.keys(obj).map((prop) => {
+        Object.keys(obj).forEach((prop) => {
             this[prop] = obj[prop]
         })
-
         isValidArray(this.points)
             ? this.setBoundingPolygon(0, 0, this.points)
             : this.setBoundingBox(0, 0, obj.width, obj.height)
-
-        if (this.aid || this.gid) {
-            this.sprite = new Sprite({
-                aid: this.aid,
-                gid: this.gid,
-                width: this.width,
-                height: this.height
-            }, this.scene)
-        }
     }
 
     setBoundingBox (x: number, y: number, w: number, h: number): void {
@@ -92,108 +75,59 @@ export class Entity {
         }
     }
 
-    onScreen (): boolean {
-        const {
-            camera,
-            resolutionX,
-            resolutionY,
-            map: {
-                tilewidth,
-                tileheight
-            }
-        } = this.scene
-
-        const { bounds, radius } = this
-        const { x, y, w, h } = bounds
-
-        if (radius) {
-            const cx = this.x + x + w / 2
-            const cy = this.y + y + h / 2
-            return (
-                cx + radius > -camera.x &&
-                cy + radius > -camera.y &&
-                cx - radius < -camera.x + resolutionX &&
-                cy - radius < -camera.y + resolutionY
-            )
-        }
-        else {
-            const cx = this.x + x
-            const cy = this.y + y
-            return (
-                cx + w + tilewidth > -camera.x &&
-                cy + h + tileheight > -camera.y &&
-                cx - tilewidth < -camera.x + resolutionX &&
-                cy - tileheight < -camera.y + resolutionY
-            )
-        }
-    }
-
-
-    draw (ctx: CanvasRenderingContext2D): void {
-        if (this.onScreen() && this.sprite && this.visible) {
-            const { camera } = this.scene
-
-            const debug = this.scene.getProperty('debug')
-            if (debug && this.debugArray) {
-                this.debugArray.map(({ x, y, color }) => {
-                    ctx.save()
-                    ctx.fillStyle = color
-                    ctx.fillRect((x * 16) + camera.x, (y * 16) + camera.y, 16, 16)
-                    ctx.restore()
-                })
-            }
-
+    // ctx, camera
+    draw (ctx: CanvasRenderingContext2D, scene: Scene): void {
+        if (scene.onScreen(this) && this.sprite && this.visible) {
+            const { camera } = scene
             this.sprite.draw(ctx,
-                Math.floor(this.x + camera.x),
-                Math.floor(this.y + camera.y)
+                Math.ceil(this.x + camera.x),
+                Math.ceil(this.y + camera.y)
             )
         }
     }
 
-    overlapTest (obj: Entity): void {
-        if ((this.onScreen()) && this.collisionMask && obj.collisionMask) {
+    overlapTest (obj: Entity, scene: Scene): void {
+        if ((scene.onScreen(this)) && this.collisionMask && obj.collisionMask) {
             const response = new Response()
             if (testPolygonPolygon(
                 this.getTranslatedBounds(), obj.getTranslatedBounds(), response
             )) {
-                this.collide && this.collide(obj, response)
-                obj.collide && obj.collide(this, response)
+                this.collide && this.collide(obj, scene, response)
+                obj.collide && obj.collide(this, scene, response)
             }
             response.clear()
         }
     }
 
-    move (): void {
+
+    // moveTo(x, y) ?
+    update (scene: Scene): void {
         if (!this.force.x && !this.force.y) return
 
-        const { map: { tilewidth, tileheight } } = this.scene
+        const { width, height, tilewidth, tileheight } = scene.map
+        const b = this.bounds
 
-        const debug = this.scene.getProperty('debug')
-        this.debugArray = []
-        
         this.expectedPos = new Vector(this.x + this.force.x, this.y + this.force.y)
 
-        const reducedForceY = Math.min(tileheight, this.force.y)
-
-        const offsetX = this.x + this.bounds.x
-        const offsetY = this.y + this.bounds.y
-        const nextX = { x: offsetX + this.force.x, y: offsetY, w: this.bounds.w, h: this.bounds.h }
-        const nextY = { x: offsetX, y: offsetY + reducedForceY, w: this.bounds.w, h: this.bounds.h }
-
-        const PX = Math.ceil((this.expectedPos.x + this.bounds.x) / tilewidth) - 1 
-        const PY = Math.ceil((this.expectedPos.y + this.bounds.y) / tileheight) - 1
-        const PW = Math.ceil((this.expectedPos.x + this.bounds.x + this.bounds.w) / tilewidth)
-        const PH = Math.ceil((this.expectedPos.y + this.bounds.y + this.bounds.h) / tileheight)
+        if (this.expectedPos.x + b.x <= 0 || this.expectedPos.x + b.x + b.w >= width * tilewidth) this.force.x = 0
+        if (this.expectedPos.y + b.y <= 0 || this.expectedPos.y + b.y + b.h >= height * tileheight) this.force.y = 0
+                
+        const offsetX = this.x + b.x
+        const offsetY = this.y + b.y
+        const PX = Math.ceil((this.expectedPos.x + b.x) / tilewidth) - 1
+        const PY = Math.ceil((this.expectedPos.y + b.y) / tileheight) - 1
+        const PW = Math.ceil((this.expectedPos.x + b.x + b.w) / tilewidth)
+        const PH = Math.ceil((this.expectedPos.y + b.y + b.h) / tileheight)
 
         if (isValidArray(this.collisionLayers) && this.collisionMask) {
-            this.collisionLayers.map((layerId) => {
-                const layer = this.scene.getLayer(layerId)
+            for (const layerId of this.collisionLayers) {
+                const layer = scene.getLayer(layerId)
                 if (layer.type === NODE_TYPE.LAYER) {
                     for (let y = PY; y < PH; y++) {
                         for (let x = PX; x < PW; x++) {
-                            const tile = layer.getTile(x, y)
-
-                            debug && this.debugArray.push({ x, y, color: 'rgba(0,255,255,0.1)' })
+                            const tile = scene.getTile(x, y, layer.id)
+                            const nextX = { x: offsetX + this.force.x, y: offsetY, w: b.w, h: b.h }
+                            const nextY = { x: offsetX, y: offsetY + this.force.y, w: b.w, h: b.h }
 
                             if (tile && tile.isSolid()) {
                                 if (tile.isCutomShape() && !(tile.isOneWay() && this.force.y < 0)) {
@@ -203,101 +137,39 @@ export class Entity {
                                             this.y + this.force.y - (y * tileheight)
                                         )
                                     )
-                                    debug && this.debugArray.push({x, y, color: 'rgba(255,255,0,0.3)'})
-                                    nextY.y += overlap.y
-                                    nextX.x += overlap.x
                                     this.force.x += overlap.x
                                     this.force.y += overlap.y
                                 } 
                                 else {
                                     const t = tile.getBounds(x, y)
                                     if (boxOverlap(nextX, t) && Math.abs(this.force.x) > 0 && !tile.isOneWay()) {
-                                        debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
                                         this.force.x = this.force.x < 0
                                             ? t.x + tile.width - offsetX
-                                            : t.x - this.bounds.w - offsetX
+                                            : t.x - b.w - offsetX
                                     }
-                                    if (boxOverlap(nextY, t) && Math.abs(this.force.y) > 0) {
-                                        debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
-                                        if (!tile.isOneWay()) {
+                                    if (boxOverlap(nextY, t)) {
+                                        if (!tile.isOneWay() && Math.abs(this.force.y) > 0) {
                                             this.force.y = this.force.y < 0
                                                 ? t.y + tile.height - offsetY
-                                                : t.y - this.bounds.h - offsetY 
+                                                : t.y - b.h - offsetY 
                                         }
-                                        else if (tile.isOneWay() && this.y + this.height <= t.y) {
-                                            this.force.y = t.y - this.bounds.h - offsetY 
+                                        else if (this.force.y >= 0 && tile.isOneWay() && this.y + b.y + b.h <= t.y) {
+                                            this.force.y = t.y - b.h - offsetY 
                                         }
                                     }
                                 }
                             }
                         }
-
-
-
-
-                        // if (Math.abs(this.force.y) !== 0) {
-
-                        // const overlap = tile.overlapTest(
-                        //     this.getTranslatedBounds(
-                        //         this.x + this.force.x - (x * tilewidth),
-                        //         this.y + this.force.y - (y * tileheight)
-                        //     )
-                        // )
-                        // if (overlap) {
-                        //     debug && this.debugArray.push({x, y, color: 'rgba(255,0,0,0.3)'})
-                        //     if (Math.abs(overlap.overlapV.y) > 0 && !(tile.isOneWay() && this.force.y < 0)) {
-                        //         this.force.y += overlap.overlapV.y
-                        //     }
-                        //     if (Math.abs(overlap.overlapV.x) > 0 && !tile.isOneWay()) {
-                        //         if (!tile.isSlope()) {
-                        //             //if (this.y + this.bounds.y + this.bounds.h + this.force.y >= tileheight + (y * tileheight)) {
-                        //             debug && this.debugArray.push({x, y, color: 'rgba(255,255,0,1)'})
-                        //             console.info(overlap.overlapV.x)
-                        //             this.force.x += overlap.overlapV.x
-                        //             // }
-                        //         }
-                        //     }
-                        // }
-                        //}
-                        //}
                     }
                 }
-            })
+            }
         }
-        this.x += this.force.x
-        this.y += this.force.y
+        this.x += this.force.x 
+        this.y += this.force.y 
         this.onGround = this.y < this.expectedPos.y
-        if (Math.abs(this.force.y) <= 0.2) {
-            this.force.y = 0
-        }
     }
 
     kill (): void {
         this.dead = true
-    }
-
-    getLight (): any {
-        const { camera } = this.scene
-        this.light.position = new Point(
-            this.x + (this.width / 2) + camera.x,
-            this.y + (this.height / 2) + camera.y
-        )
-        return this.light
-    }
-
-    getLightMask (): any[] {
-        const { camera } = this.scene
-        const x = this.x + camera.x
-        const y = this.y + camera.y
-        const shadows = []
-
-        if (this.shape === 'ellipse') {
-            shadows.push(createDiscObject(x, y, this.width / 2))
-        }
-        else {
-            const { pos, points } = this.getTranslatedBounds(x, y)
-            shadows.push(createPolygonObject(pos.x, pos.y, points))
-        }
-        return shadows
     }
 }

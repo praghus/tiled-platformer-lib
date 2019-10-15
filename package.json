@@ -55,9 +55,7 @@
   "engines": {
     "node": ">=8.9"
   },
-  "dependencies": {
-    "sha.js": "^2.4.11"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@bitjson/npm-scripts-info": "^1.0.0",
     "@bitjson/typedoc": "^0.15.0-0",
@@ -70,7 +68,6 @@
     "cz-conventional-changelog": "^2.1.0",
     "eslint": "^6.4.0",
     "gh-pages": "^2.0.1",
-    "lucendi": "^1.0.3",
     "npm-run-all": "^4.1.5",
     "nyc": "^14.1.1",
     "open-cli": "^5.0.0",
