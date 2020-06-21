@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TILE_TYPE = exports.NODE_TYPE = void 0;
+var NODE_TYPE;
+(function (NODE_TYPE) {
+    NODE_TYPE["CUSTOM"] = "custom";
+    NODE_TYPE["IMAGE_LAYER"] = "imagelayer";
+    NODE_TYPE["LAYER"] = "layer";
+    NODE_TYPE["OBJECT_GROUP"] = "objectgroup";
+    NODE_TYPE["PROPERTIES"] = "properties";
+    NODE_TYPE["TILESET"] = "tileset";
+})(NODE_TYPE = exports.NODE_TYPE || (exports.NODE_TYPE = {}));
+var TILE_TYPE;
+(function (TILE_TYPE) {
+    TILE_TYPE["NON_COLLIDING"] = "no_collide";
+    TILE_TYPE["ONE_WAY"] = "one_way";
+    TILE_TYPE["INVISIBLE"] = "invisible";
+    TILE_TYPE["SLOPE"] = "slope";
+})(TILE_TYPE = exports.TILE_TYPE || (exports.TILE_TYPE = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29uc3RhbnRzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vbGliL2NvbnN0YW50cy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFDQSxJQUFZLFNBT1g7QUFQRCxXQUFZLFNBQVM7SUFDakIsOEJBQWlCLENBQUE7SUFDakIsdUNBQTBCLENBQUE7SUFDMUIsNEJBQWUsQ0FBQTtJQUNmLHlDQUE0QixDQUFBO0lBQzVCLHNDQUF5QixDQUFBO0lBQ3pCLGdDQUFtQixDQUFBO0FBQ3ZCLENBQUMsRUFQVyxTQUFTLEdBQVQsaUJBQVMsS0FBVCxpQkFBUyxRQU9wQjtBQUVELElBQVksU0FLWDtBQUxELFdBQVksU0FBUztJQUNqQix5Q0FBNEIsQ0FBQTtJQUM1QixnQ0FBbUIsQ0FBQTtJQUNuQixvQ0FBdUIsQ0FBQTtJQUN2Qiw0QkFBZSxDQUFBO0FBQ25CLENBQUMsRUFMVyxTQUFTLEdBQVQsaUJBQVMsS0FBVCxpQkFBUyxRQUtwQiJ9
