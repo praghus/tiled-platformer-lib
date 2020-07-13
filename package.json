@@ -61,7 +61,7 @@
     "open-cli": "^5.0.0",
     "prettier": "^1.18.2",
     "sat": "^0.8.0",
-    "standard-version": "^6.0.1",
+    "standard-version": "^8.0.1",
     "trash-cli": "^3.0.0",
     "typescript": "^3.5.3"
   },
