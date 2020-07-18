@@ -141,7 +141,7 @@ export class Scene {
     }
     forEachVisibleObject(layerId, fn = noop) {
         for (const obj of this.getLayer(layerId).objects) {
-            obj.visible && this.onScreen(obj) && fn(obj);
+            obj.visible && obj.isActive(this) && fn(obj);
         }
     }
     forEachVisibleTile(layerId, fn = noop) {

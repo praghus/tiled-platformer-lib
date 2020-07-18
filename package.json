@@ -20,10 +20,10 @@
     "build:main": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
     "fix": "run-s fix:*",
-    "fix:eslint": "eslint src/** --fix",
+    "fix:eslint": "eslint lib/** --fix",
     "doc": "run-s doc:html && open-cli build/docs/index.html",
-    "doc:html": "typedoc src/ --exclude **/*.spec.ts --target ES6 --mode file --out build/docs",
-    "doc:json": "typedoc src/ --exclude **/*.spec.ts --target ES6 --mode file --json build/docs/typedoc.json",
+    "doc:html": "typedoc lib/ --exclude **/*.spec.ts --target ES6 --mode file --out build/docs",
+    "doc:json": "typedoc lib/ --exclude **/*.spec.ts --target ES6 --mode file --json build/docs/typedoc.json",
     "doc:publish": "gh-pages -m \"[ci skip] Updates\" -d build/docs",
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && npm i",
@@ -43,7 +43,7 @@
     "prepare-release": "One-step: clean, build, publish docs, and prep a release"
   },
   "engines": {
-    "node": ">=12.17.0"
+    "node": ">=12.16.0"
   },
   "devDependencies": {
     "@bitjson/npm-scripts-info": "^1.0.0",
@@ -60,7 +60,6 @@
     "npm-run-all": "^4.1.5",
     "open-cli": "^6.0.1",
     "prettier": "^2.0.5",
-    "sat": "^0.8.0",
     "standard-version": "^8.0.0",
     "trash-cli": "^3.0.0",
     "typescript": "^3.5.3"
@@ -87,5 +86,9 @@
     "exclude": [
       "**/*.spec.js"
     ]
+  },
+  "dependencies": {
+    "lucendi": "^1.0.9",
+    "sat": "^0.8.0"
   }
 }

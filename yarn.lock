@@ -3082,6 +3082,11 @@ lru-cache@^4.0.0, lru-cache@^4.0.1:
     pseudomap "^1.0.2"
     yallist "^2.1.2"
 
+lucendi@^1.0.9:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/lucendi/-/lucendi-1.0.9.tgz#20088e7829f7a08a0fef7c6a63cf978da7e9c742"
+  integrity sha512-8JiE9HhuHkdiaqxtQZfJ8aqc31cUbUZmXdRj6ROhsskyY664btUY/mWVWOJ+Jyq1WgkcK8lmI26rRE/8i9ZuDQ==
+
 lunr@^2.3.8:
   version "2.3.8"
   resolved "https://registry.yarnpkg.com/lunr/-/lunr-2.3.8.tgz#a8b89c31f30b5a044b97d2d28e2da191b6ba2072"

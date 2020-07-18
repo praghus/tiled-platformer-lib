@@ -1,4 +1,6 @@
 import { Bounds, TmxTileset, StringTMap } from 'tiled-platformer-lib'
+import { Circle, Point, Polygon } from 'lucendi'
+import { COLORS } from './constants'
 
 export const noop = (): void => {}
 
@@ -24,7 +26,7 @@ export const normalize = (n: number, min: number, max: number): number => {
 
 export const getEmptyImage = (): HTMLImageElement => {
     const img = document.createElement('img')
-    img.src =  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4wYSESAUu+6QoAAAAF9JREFUOMutk0kOwDAIA+0q//+yeyLqkiCoywlFjFlDQYJhIxyC7IAzcTidSm7MFayIvOKfUCayjF0BrbddxkprgjR25RJkgNmGDrjmtvD/EK01Wof09ZRLq8pE6H7nE1n2iZCrGoItAAAAAElFTkSuQmCC'
+    img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4wYSESAUu+6QoAAAAF9JREFUOMutk0kOwDAIA+0q//+yeyLqkiCoywlFjFlDQYJhIxyC7IAzcTidSm7MFayIvOKfUCayjF0BrbddxkprgjR25RJkgNmGDrjmtvD/EK01Wof09ZRLq8pE6H7nE1n2iZCrGoItAAAAAElFTkSuQmCC'
     return img
 }
 
@@ -57,4 +59,48 @@ export function calculatePolygonBounds (points: [number[]]): StringTMap<number> 
         w: maxX + Math.abs(offsetX),
         h: maxY + Math.abs(offsetY)
     }
+}
+
+export function outline (ctx: CanvasRenderingContext2D): (x, y, width, height, color) => void {
+    return (x, y, width, height, color) => {
+        ctx.save()
+        ctx.strokeStyle = color
+        ctx.beginPath()
+        ctx.moveTo(x, y)
+        ctx.lineTo(x + width, y)
+        ctx.lineTo(x + width, y + height)
+        ctx.lineTo(x, y + height)
+        ctx.lineTo(x, y)
+        ctx.stroke()
+        ctx.restore()
+    }
+}
+
+export function stroke (ctx): (x, y, points, color) => void {
+    return (x, y, points, color) => {
+        ctx.save()
+        ctx.strokeStyle = color
+        ctx.beginPath()
+        ctx.moveTo(points[0].x + x, points[0].y + y)
+        points.map((v: SAT.Vector) => ctx.lineTo(x + v.x, y + v.y))
+        ctx.lineTo(points[0].x + x, points[0].y + y)
+        ctx.stroke()
+        ctx.restore()
+    }
+}
+
+export function fillText (ctx: CanvasRenderingContext2D): (text: string, x: number, y: number, color?: string) => void {
+    return (text: string, x: number, y: number, color = COLORS.LIGHT_RED) => {
+        ctx.font = '4px Courier'
+        ctx.fillStyle = color
+        ctx.fillText(text, x, y)
+    }
+}
+
+export function lightMaskRect (x: number, y: number, points: any[]) {
+    return new Polygon(points.map((v) => new Point(v.x + x, v.y + y)))
+}
+
+export function lightMaskDisc (x: number, y: number, radius: number) {
+    return new Circle(new Point(x + radius, y + radius), radius)
 }

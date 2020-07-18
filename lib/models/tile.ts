@@ -24,7 +24,9 @@ export class Tile implements Drawable {
     public then = getPerformance()
     public frameStart = getPerformance()
     public terrain: number[]
-    public collisionMask: SAT.Polygon[]
+    public collisionMasks: SAT.Polygon[]
+    public flipV = false;
+    public flipH = false;
 
     constructor (
         public id: number, 
@@ -36,19 +38,25 @@ export class Tile implements Drawable {
         this.width = this.tileset.tilewidth
         this.height = this.tileset.tileheight
         this.terrain = this.getTerrain()
-        this.collisionMask = this.getCollisionMask()
+        this.collisionMasks = this.getCollisionMask()
     }
 
-    overlapTest (polygon: SAT.Polygon): SAT.Response {
+    public isCutomShape = (): boolean => getProperties(this, 'objects')
+    public isSlope = (): boolean => this.type === TILE_TYPE.SLOPE
+    public isSolid = (): boolean => this.type !== TILE_TYPE.NON_COLLIDING
+    public isOneWay = (): boolean => this.type === TILE_TYPE.ONE_WAY
+    public isInvisible = (): boolean => this.type === TILE_TYPE.INVISIBLE
+
+    public overlapTest (polygon: SAT.Polygon): SAT.Response {
         const response = new Response()
-        const hasCollision = this.collisionMask.some(
+        const hasCollision = this.collisionMasks.some(
             (shape) => testPolygonPolygon(shape, polygon, response)
         )
         response.clear()
         return hasCollision && response
     }
 
-    collide (polygon: SAT.Polygon): SAT.Vector {
+    public collide (polygon: SAT.Polygon): SAT.Vector {
         const overlap = this.overlapTest(polygon)
         let x: number, y: number
         if (overlap) {
@@ -58,7 +66,7 @@ export class Tile implements Drawable {
         return new Vector(x, y)
     }
 
-    getBounds (x: number, y: number): Bounds {
+    public getBounds (x: number, y: number): Bounds {
         return {
             x: x * this.width,
             y: y * this.height,
@@ -67,12 +75,12 @@ export class Tile implements Drawable {
         }
     }
 
-    getTerrain (): number[] {
+    public getTerrain (): number[] {
         const { terrain } = this.properties
         return terrain && terrain.split(',').map((id: string) => id ? parseInt(id) : null)
     }
 
-    getNextGid (): number {
+    public getNextGid (): number {
         const { tileset: { firstgid } } = this
         if (this.properties && this.properties.animation) {
             this.frameStart = getPerformance()
@@ -88,7 +96,7 @@ export class Tile implements Drawable {
         else return this.id
     }
 
-    getCollisionMask (posX = 0, posY = 0): SAT.Polygon[] {
+    public getCollisionMask (posX = 0, posY = 0): SAT.Polygon[] {
         const objects = getProperties(this, 'objects')
         return isValidArray(objects)
             ? objects.map(({ shape, x, y, width, height, points }) =>
@@ -101,32 +109,13 @@ export class Tile implements Drawable {
             : [new Box(new Vector(posX, posY), this.width, this.height).toPolygon()]
     }
 
-    isCutomShape (): boolean {
-        return getProperties(this, 'objects')
-    }
-
-    isSlope (): boolean {
-        return this.type === TILE_TYPE.SLOPE
-    }
-
-    isSolid (): boolean {
-        return this.type !== TILE_TYPE.NON_COLLIDING
-    }
-
-    isOneWay (): boolean {
-        return this.type === TILE_TYPE.ONE_WAY
-    }
-
-    isInvisible (): boolean {
-        return this.type === TILE_TYPE.INVISIBLE
-    }
-
-    draw (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1): void {
+    public draw (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1): void {
         if (!this.isInvisible()) {
             const { image, tileset: { columns, firstgid, tilewidth, tileheight } } = this
             const tileGid = this.getNextGid()
             const posX = ((tileGid - firstgid) % columns) * tilewidth
             const posY = (Math.ceil(((tileGid - firstgid) + 1) / columns) - 1) * tileheight
+
             //y = (tileheight - tile.height)
             ctx.drawImage(image,
                 posX, posY, tilewidth, tileheight,

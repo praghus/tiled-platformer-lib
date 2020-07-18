@@ -6,6 +6,8 @@ export class Sprite implements Drawable {
     public animFrame = 0
     public then = getPerformance()
     public frameStart = getPerformance()
+    public flipV = false
+    public flipH = false
 
     constructor (
         public id: string, 
@@ -43,24 +45,32 @@ export class Sprite implements Drawable {
     }
 
     draw (ctx: CanvasRenderingContext2D, x: number, y: number, scale = 1): void {
-        const { image, animation, animFrame, width, height } = this
+        const { image, animation, animFrame, width, height, flipH, flipV } = this
+        const scaleH = flipH ? -1 : 1 // Set horizontal scale to -1 if flip horizontal
+        const scaleV = flipV ? -1 : 1 // Set verical scale to -1 if flip vertical
+        const FX = flipH ? width * -1 : 0 // Set x position to -100% if flip horizontal 
+        const FY = flipV ? height * -1 : 0 // Set y position to -100% if flip vertical
+        const flip = flipH || flipV
+        const [x1, y1] = [(x - FX) * scaleH, (y - FY) * scaleV]
+            
+        flip && ctx.scale(scaleH, scaleV)
         if (animation) {
             const { frames, strip } = animation
-            const posX = strip
-                ? strip.x + animFrame * animation.width
-                : isValidArray(frames) && frames[animFrame][0]
-            const posY = strip
-                ? strip.y
-                : isValidArray(frames) && frames[animFrame][1]
+            const frame = isValidArray(frames) && frames[animFrame] || [0, 0]
+            const posX = strip ? strip.x + animFrame * animation.width : frame[0]
+            const posY = strip ? strip.y : frame[1]
 
             ctx.drawImage(image,
                 posX, posY, animation.width, animation.height,
-                x, y, animation.width * scale, animation.height * scale
+                x1, y1, animation.width * scale, animation.height * scale
             )
         }
         else if (image) {
-            ctx.drawImage(image, 0, 0, width, height, x, y, width * scale, height * scale)
+            ctx.drawImage(image, 
+                0, 0, width, height, x1, y1, width * scale, height * scale
+            )
         }
+        flip && ctx.scale(scaleH, scaleV)
     }
 }
 

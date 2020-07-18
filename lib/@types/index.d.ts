@@ -19,6 +19,8 @@ declare namespace TPL {
         animFrame: number;
         then: number;
         frameStart: number; 
+        flipV: boolean;
+        flipH: boolean;
 
         animate?(animation?: Animation): void; 
         getNextGid?(): number;
@@ -144,20 +146,17 @@ declare namespace TPL {
         y: number;
         bounds: SAT.Box;
         follow: Entity;
-        middlePoint: SAT.Vector;
-        magnitude: number;
-        shakeDirection: number;
+        focusPoint: SAT.Vector;
 
         constructor(viewport: Viewport); 
 
         center(): void;
         getBounds(): SAT.Box;
+        moveTo(x: number, y: number): void;
         resize(viewport: Viewport): void;
         setBounds(x: number, y: number, w: number, h: number): void;
-        setDefaultMiddlePoint(): void;
         setFollow(follow: Entity, center?: boolean): void;
-        setMiddlePoint(x: number, y: number): void;
-        shake(): void;
+        setFocusPoint(x: number, y: number): void;
         update(): void;
     }
 
@@ -173,7 +172,7 @@ declare namespace TPL {
         then: number;
         frameStart: number;
         terrain: number[];
-        collisionMask: SAT.Polygon[];
+        collisionMasks: SAT.Polygon[];
 
         constructor (
             id: number, 
@@ -200,6 +199,8 @@ declare namespace TPL {
         public animFrame: number;
         public then: number
         public frameStart: number;
+        public flipV: boolean;
+        public flipH: boolean;
     
         constructor(
             id: string, 
@@ -213,15 +214,19 @@ declare namespace TPL {
     }
 
     export class Entity {
-        id: number;
+        id: string;
+        pid: string;
+        gid: number;
         x: number;
         y: number;
         width: number;
         height: number;
         layerId: number;
+        damage: number;
         type: string;
+        family: string;
         image: string;
-        gid: number;
+        color: string
         radius: number;
         direction: string;
         bounds: StringTMap<number>;
@@ -229,10 +234,11 @@ declare namespace TPL {
         force: SAT.Vector;
         expectedPos: SAT.Vector;
         initialPos: SAT.Vector;
-        collisionMask: SAT.Box | SAT.Polygon;
+        collisionMask: SAT.Polygon;
         collisionLayers: number[];
-        points: [number[]];
-        attached: boolean;
+        energy: number[];
+        collided: Entity[];
+        activated: boolean;
         dead: boolean;
         onGround: boolean;
         shadowCaster: boolean;
@@ -245,14 +251,17 @@ declare namespace TPL {
         constructor (obj: StringTMap<any>);
 
         collide(obj: Entity, scene: Scene, response: SAT.Response): void;
-        input(scene: Scene): void;
         draw(ctx: CanvasRenderingContext2D, scene: Scene): void;
         getTranslatedBounds(x: number, y: number): any;
+        addLightSource (color: string, distance: number, radius: number): any;
+        getLight (scene: Scene): any;
+        getLightMask (scene: Scene): any;
         kill(): void;
+        hit (damage: number): void;
+        isActive (scene: Scene): boolean;
         overlapTest(obj: Entity, scene: Scene): void;
         setBoundingBox(x: number, y: number, w: number, h: number): void;
-        setBoundingPolygon(x: number, y: number, points: [number[]]): void;
-        update(scene: Scene, time?: number): void;
+        update(scene: Scene, delta?: number): void;
     }
 
     export class Layer {
@@ -262,7 +271,6 @@ declare namespace TPL {
         data: number[];
         type: string;
         properties: StringTMap<any>;
-        activeObjectsCount: number;
         width: number;
         height: number;
         visible: number;
@@ -278,7 +286,7 @@ declare namespace TPL {
         put(x: number, y: number, tileId: number): void;
         removeObject(obj: Entity): void;
         toggleVisibility(toggle: number): void;
-        update(scene: Scene, time: number): void;
+        update(scene: Scene, delta: number): void;
     }
 
     export class Scene {
@@ -289,10 +297,12 @@ declare namespace TPL {
         layers: Layer[];
         properties?: StringTMap<any>;
         tiles: StringTMap<Tile>;
+        timeoutsPool: Record<string, any>;
         map: TmxMap;
         viewport: Viewport;
         currentCameraId: number;
         shadowCastingLayerId: number;
+        debug: boolean;
 
         constructor(
             images: StringTMap<HTMLImageElement>,
@@ -300,29 +310,29 @@ declare namespace TPL {
             properties?: StringTMap<any>
         );
 
-        addLayer(layer: Layer, index?: number): void;
-        addTmxMap(data: TmxMap, entities: StringTMap<any>): void;
+        addLayer(layer: Layer, index?: number): Layer;
         addObject(entity: Entity, index?: number): void;
         createObject(obj: TmxObject, layerId: number): void;
-        removeTile(x: number, y: number, layerId: number): void;
-        createCustomLayer(Layer: any, index?: number): void;
+        createTmxMap(data: TmxMap, entities: StringTMap<any>): void;
+        createCustomLayer(Layer: any, index?: number): Layer;
         createTmxLayer(tmxLayer: TmxLayer): void
         createSprite(id: string, width: number, height: number): Sprite
         createTile(id: number): Tile;
         draw(ctx: CanvasRenderingContext2D): void;
-        focus (entity?: Entity): void;
         onScreen(object: Entity): boolean;
         resize(viewport: Viewport): void;
-        update(time: number, input?: Input): void;
+        update(delta: number, input?: Input): void;
         setProperty(name: string, value: any): void;
         getProperty(name: string): any;
+        removeTile(x: number, y: number, layerId: number): void;
         removeLayer(index: number): void;
         showLayer(layerId: number): void;
         hideLayer(layerId: number): void;
         getMapProperty(name: string): any;
         getObjects(layerId: number): Entity[];
-        getObjectById(id: number, layerId: number): Entity;
+        getObjectById(id: string, layerId: number): Entity;
         getObjectByType(type: string, layerId: number): Entity;
+        getObjectsByType(type: string, layerId: number): Entity[];
         getObjectByProperty(key: string, value: any, layerId: number): Entity;
         getObjectLayers(): Layer[];
         getLayer(id: number): Layer;
@@ -332,6 +342,9 @@ declare namespace TPL {
         isSolidArea(x: number, y: number, layers: number[]): boolean;
         forEachVisibleObject(layerId: number, fn: (obj: Entity) => void): void;
         forEachVisibleTile(layerId: number, fn: (tile: Tile, x: number, y: number) => void): void;
+        checkTimeout(name: string): boolean;
+        startTimeout(name: string, duration: number, fn?: () => void): void;
+        stopTimeout(name: string): void;
     }
 }
 

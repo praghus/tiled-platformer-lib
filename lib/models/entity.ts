@@ -1,113 +1,116 @@
 import { Scene, StringTMap, Drawable } from 'tiled-platformer-lib'
-import { NODE_TYPE } from '../constants'
-import {
-    Box,
-    Polygon,
-    Response,
-    Vector,
-    testPolygonPolygon
-} from 'sat'
-import {
-    boxOverlap,
-    calculatePolygonBounds,
-    isValidArray
-} from '../helpers'
+import { Light } from 'lucendi'
+import { COLORS, NODE_TYPE } from '../constants'
+import { Box, Polygon, Response, Vector, testPolygonPolygon } from 'sat'
+import { boxOverlap, isValidArray, outline, fillText, stroke, lightMaskDisc, lightMaskRect } from '../helpers'
 
 export class Entity {
-    public id: number
+    public id: string
+    public pid: string;
+    public gid: number
     public x: number
     public y: number
     public width: number
     public height: number
     public layerId: number
+    public damage: number
     public type: string
+    public family: string
     public image: string
-    public gid: number
+    public color: string
     public radius: number
     public direction: string
     public bounds: StringTMap<number>
     public properties: StringTMap<any>
     public force: SAT.Vector = new Vector(0, 0)
-    public expectedPos: SAT.Vector
+    public expectedPos: SAT.Vector = new Vector(0, 0)
     public initialPos: SAT.Vector
-    public collisionMask: SAT.Box | SAT.Polygon
-    public collisionLayers: number[]
-    public attached: boolean
+    public collisionMask: SAT.Polygon
+    public collisionLayers: number[] = []
+    public collided: Entity[] = []
+    public energy: number[]
+    public activated: boolean
     public onGround: boolean
     public shadowCaster: boolean
     public sprite: Drawable
     public solid: boolean
     public shape: string
-    public points: [number[]]
     public light: any
     public dead = false
     public visible = true 
 
     public collide: (obj: Entity, scene: Scene, response: SAT.Response) => void
-    public input: (scene: Scene) => void
+    public kill = () => this.dead = true
+    public isActive = (scene: Scene): boolean => this.activated || scene.onScreen(this)
 
     constructor (obj: StringTMap<any>) {
         Object.keys(obj).forEach((prop) => this[prop] = obj[prop])
         this.initialPos = new Vector(this.x, this.y)
-        isValidArray(this.points)
-            ? this.setBoundingPolygon(0, 0, this.points)
-            : this.setBoundingBox(0, 0, this.width, this.height)
+        // @todo: refactor
+        this.id = obj.id 
+            ? `${obj.id}` 
+            : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+        this.setBoundingBox(0, 0, this.width, this.height)
     }
 
-    setBoundingBox (x: number, y: number, w: number, h: number): void {
+    
+    public setBoundingBox (x: number, y: number, w: number, h: number): void {
         this.bounds = { x, y, w, h }
         this.collisionMask = new Box(new Vector(0, 0), w, h).toPolygon().translate(x, y)
     }
 
-    setBoundingPolygon (x: number, y: number, points: [number[]]): void {
-        this.bounds = calculatePolygonBounds(points)
-        this.collisionMask = new Polygon(
-            new Vector(x, y),
-            points.map((v) => new Vector(v[0], v[1]))
-        )
-    }
-
-    getTranslatedBounds (x = this.x, y = this.y): any {
+    public getTranslatedBounds (x = this.x, y = this.y): any {
         if (this.collisionMask instanceof Polygon) {
-            this.collisionMask.pos.x = x
-            this.collisionMask.pos.y = y
-            return this.collisionMask
+            return Object.assign({}, this.collisionMask, { pos: { x, y } })
         }
     }
 
-    // ctx, camera
-    draw (ctx: CanvasRenderingContext2D, scene: Scene): void {
-        if (scene.onScreen(this) && this.sprite && this.visible) {
+    public draw (ctx: CanvasRenderingContext2D, scene: Scene): void {
+        if (this.isActive(scene) && this.visible) {
             const { camera } = scene
-            this.sprite.draw(ctx,
-                Math.ceil(this.x + camera.x),
-                Math.ceil(this.y + camera.y)
-            )
+            if (this.sprite) {
+                this.sprite.draw(ctx, this.x + camera.x, this.y + camera.y)
+            }
+            else if (this.color) {
+                ctx.save()
+                ctx.fillStyle = this.color
+                ctx.beginPath()
+                ctx.rect(this.x + camera.x, this.y + camera.y, this.width, this.height)
+                ctx.fill()
+                ctx.closePath()
+                ctx.restore()
+            }
+            if (scene.debug) this._displayDebug(ctx, scene)
         }
     }
 
-    overlapTest (obj: Entity, scene: Scene): void {
-        if ((scene.onScreen(this)) && this.collisionMask && obj.collisionMask) {
+    public hit (damage: number): void {
+        if (isValidArray(this.energy)) {
+            this.energy[0] -= damage
+        }
+    }
+
+    public overlapTest (obj: Entity, scene: Scene): void {
+        if (this.isActive(scene) && this.collisionMask && obj.collisionMask) {
             const response = new Response()
             if (testPolygonPolygon(
                 this.getTranslatedBounds(), obj.getTranslatedBounds(), response
             )) {
                 this.collide && this.collide(obj, scene, response)
+                this.collided.push(obj)
                 obj.collide && obj.collide(this, scene, response)
+                obj.collided.push(this)
             }
             response.clear()
         }
     }
 
-    update (scene: Scene): void {
-        this.input(scene)
-
+    public update (scene: Scene): void {
+        this.expectedPos = new Vector(this.x + this.force.x, this.y + this.force.y)
         if (!this.force.x && !this.force.y) return
 
         const { width, height, tilewidth, tileheight } = scene.map
         const b = this.bounds
-
-        this.expectedPos = new Vector(this.x + this.force.x, this.y + this.force.y)
 
         if (this.expectedPos.x + b.x <= 0 || this.expectedPos.x + b.x + b.w >= width * tilewidth) this.force.x = 0
         if (this.expectedPos.y + b.y <= 0 || this.expectedPos.y + b.y + b.h >= height * tileheight) this.force.y = 0
@@ -169,7 +172,48 @@ export class Entity {
         this.onGround = this.y < this.expectedPos.y
     }
 
-    kill (): void {
-        this.dead = true
+    public addLightSource (color: string, distance: number, radius = 8) {
+        this.light = new Light({ color, distance, radius, id: this.type })
+    }
+
+    public getLight (scene: Scene) {
+        if (!this.light) return
+        this.light.move(
+            this.x + (this.width / 2) + scene.camera.x,
+            this.y + (this.height / 2) + scene.camera.y
+        )
+        return this.light
+    }
+
+    public getLightMask (scene: Scene) {
+        const x = Math.round(this.x + scene.camera.x)
+        const y = Math.round(this.y + scene.camera.y)
+        const { pos, points } = this.getTranslatedBounds(x, y)
+        return this.shape === 'ellipse'
+            ? lightMaskDisc(x, y, this.width / 2)
+            : lightMaskRect(pos.x, pos.y, points)
+    }
+
+    private _displayDebug (ctx: CanvasRenderingContext2D, scene: Scene) {
+        const { camera } = scene
+        const { collisionMask, width, height, type, visible, force } = this
+        const [ posX, posY ] = [ Math.floor(this.x + camera.x), Math.floor(this.y + camera.y) ]
+
+        ctx.lineWidth = 0.1
+        outline(ctx)(posX, posY, width, height, visible ? COLORS.WHITE_30 : COLORS.PURPLE)
+        
+        ctx.lineWidth = 0.5
+        const color = this.collided.length ? COLORS.LIGHT_RED : COLORS.GREEN 
+        stroke(ctx)(posX, posY, collisionMask.points, visible ? color : COLORS.PURPLE)
+
+        const text = fillText(ctx)
+        const [ x, y ] = [ posX + width + 4, posY + height / 2 ]
+
+        text(`${type}`, posX, posY - 10, COLORS.WHITE)
+        text(`x:${Math.floor(this.x)}`, posX, posY - 6)
+        text(`y:${Math.floor(this.y)}`, posX, posY - 2)
+
+        force.x !== 0 && text(`${force.x.toFixed(2)}`, x, y - 2)
+        force.y !== 0 && text(`${force.y.toFixed(2)}`, x, y + 2)
     }
 }

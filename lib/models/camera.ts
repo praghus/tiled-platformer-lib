@@ -6,33 +6,44 @@ export class Camera {
     public y: number
     public bounds: SAT.Box
     public follow: Entity
-    public middlePoint: SAT.Vector
-    public magnitude = 2
-    public shakeDirection = 1
+    public focusPoint: SAT.Vector
 
     constructor (public viewport: Viewport) {
-        this.resize(viewport)
-        this.setDefaultMiddlePoint()
-        // bindings
+        const { width, height, scale } = viewport
+        this.resize(viewport)        
+        this.setFocusPoint(
+            Math.round(width / scale) / 2,
+            Math.round(height / scale) / 2
+        )
+
         this.center = this.center.bind(this) 
         this.getBounds = this.getBounds.bind(this)
+        this.moveTo = this.moveTo.bind(this)
         this.resize = this.resize.bind(this)
         this.setBounds = this.setBounds.bind(this)
-        this.setMiddlePoint = this.setMiddlePoint.bind(this) 
-        this.setDefaultMiddlePoint = this.setDefaultMiddlePoint.bind(this) 
+        this.setFocusPoint = this.setFocusPoint.bind(this) 
         this.setFollow = this.setFollow.bind(this) 
-        this.shake = this.shake.bind(this) 
     }
 
     resize (viewport: Viewport): void {
         this.viewport = viewport
     }
 
+    moveTo (x: number, y: number): void {
+        this.x = -x
+        this.y = -y
+    }
+
     center (): void {
-        if (this.follow) {
-            this.x = -((this.follow.x + this.follow.width / 2) - this.middlePoint.x)
-            this.y = -((this.follow.y + this.follow.height / 2) - this.middlePoint.y)
-        }
+        this.follow
+            ? this.moveTo(
+                (this.follow.x + this.follow.width / 2) - this.focusPoint.x,
+                (this.follow.y + this.follow.height / 2) - this.focusPoint.y
+            )
+            : this.moveTo(
+                this.viewport.width / 2,
+                this.viewport.height / 2
+            )
     }
 
     getBounds (): SAT.Box {
@@ -45,19 +56,10 @@ export class Camera {
 
     setBounds (x: number, y: number, w: number, h: number): void {
         this.bounds = new Box(new Vector(x, y), w, h)
-        this.center()
     }
 
-    setDefaultMiddlePoint (): void {
-        const { width, height, scale } = this.viewport
-        this.setMiddlePoint(
-            Math.round(width / scale) / 2,
-            Math.round(height / scale) / 2
-        )
-    }
-
-    setMiddlePoint (x: number, y: number): void {
-        this.middlePoint = new Vector(x, y)
+    setFocusPoint (x: number, y: number): void {
+        this.focusPoint = new Vector(x, y)
     }
 
     setFollow (follow: Entity, center = true): void {
@@ -65,30 +67,21 @@ export class Camera {
         center && this.center()
     }
 
-    shake (): void {
-        if (this.magnitude < 0) {
-            this.magnitude = 2
-            return
-        }
-        this.magnitude -= 0.2
-        setTimeout(this.shake, 50)
-    }
-
     update (): void {
         if (!this.follow) return
         
-        const { follow, middlePoint, viewport: { width, height, scale } } = this
+        const { follow, focusPoint, viewport: { width, height, scale } } = this
         const { pos: { x, y }, w, h } = this.getBounds()
 
         const resolutionX = width / scale
         const resolutionY = height / scale
-        const moveX = ((follow.x + follow.width / 2) + this.x - middlePoint.x) / (resolutionX / 10)
-        const moveY = ((follow.y + follow.height / 2) + this.y - middlePoint.y) / (resolutionY / 10)
+        const moveX = ((follow.x + follow.width / 2) + this.x - focusPoint.x) / (resolutionX / 10) 
+        const moveY = ((follow.y + follow.height / 2) + this.y - focusPoint.y) / (resolutionY / 10) 
         const followMidX = follow.x + follow.width / 2
         const followMidY = follow.y + follow.height / 2
         
-        this.x -= moveX + follow.force.x
-        this.y -= moveY + follow.force.y
+        this.x -= Math.round(moveX + follow.force.x)
+        this.y -= Math.round(moveY + follow.force.y)
 
         if (
             followMidX > x && 
@@ -96,28 +89,16 @@ export class Camera {
             followMidY > y && 
             followMidY < y + h
         ) {
-            if (this.x - resolutionX < -x - w) this.x = -x - w + resolutionX
-            if (this.y - resolutionY < -y - h) this.y = -y - h + resolutionY
+            if (this.x - resolutionX < -x - w) this.x = (-x - w + resolutionX) 
+            if (this.y - resolutionY < -y - h) this.y = (-y - h + resolutionY) 
             if (this.x > -x) this.x = -x 
-            if (this.y > -y) this.y = -y
+            if (this.y > -y) this.y = -y 
         }
         else {
-            if (this.x - resolutionX < -w) this.x = -w + resolutionX
-            if (this.y - resolutionY < -h) this.y = -h + resolutionY
+            if (this.x - resolutionX < -w) this.x = (-w + resolutionX) 
+            if (this.y - resolutionY < -h) this.y = (-h + resolutionY) 
             if (this.x > 0) this.x = 0
             if (this.y > 0) this.y = 0
         } 
-
-        // shake
-        if (this.magnitude !== 2) {
-            if (this.shakeDirection === 1) this.y += this.magnitude
-            else if (this.shakeDirection === 2) this.x += this.magnitude
-            else if (this.shakeDirection === 3) this.y -= this.magnitude
-            else this.x -= this.magnitude
-            this.shakeDirection = this.shakeDirection < 4 ? this.shakeDirection + 1 : 1
-        }
-
-        this.x = Math.round(this.x)
-        this.y = Math.round(this.y)
     }
 }

@@ -1,6 +1,6 @@
 import { Scene, TmxLayer, StringTMap } from 'tiled-platformer-lib'
-import { isValidArray } from '../helpers'
-import { NODE_TYPE } from '../constants'
+import { fillText, isValidArray, stroke } from '../helpers'
+import { COLORS, NODE_TYPE } from '../constants'
 import { Entity } from './entity'
 
 export class Layer {
@@ -8,7 +8,6 @@ export class Layer {
     public name: string
     public type: string = NODE_TYPE.CUSTOM
     public properties: StringTMap<any> = {}
-    public activeObjectsCount: number
     public width: number
     public height: number
     public visible: number
@@ -32,17 +31,16 @@ export class Layer {
         return this.objects
     }
 
-    update (scene: Scene, time: number): void {
+    update (scene: Scene, delta: number): void {
         if (isValidArray(this.objects)) {
-            this.activeObjectsCount = 0
             for (const obj of this.objects) {
-                if (scene.onScreen(obj)) {
+                if (obj.isActive(scene)) {
+                    obj.collided = []
                     this.objects.forEach(
                         (activeObj) => activeObj.id !== obj.id && activeObj.overlapTest(obj, scene)
                     )
-                    obj.update && obj.update(scene, time)
+                    obj.update && obj.update(scene, delta)
                     obj.dead && this.removeObject(obj)
-                    this.activeObjectsCount++
                 }
             }
         }
@@ -52,7 +50,16 @@ export class Layer {
         if (this.visible) {
             switch (this.type) {
             case NODE_TYPE.LAYER:
-                scene.forEachVisibleTile(this.id, (tile, x, y) => tile && tile.draw(ctx, x, y))
+                scene.forEachVisibleTile(this.id, (tile, x, y) => {
+                    tile.draw(ctx, x, y)
+                    if (scene.debug) {
+                        tile.collisionMasks.map((cm) => {
+                            ctx.lineWidth = 0.1
+                            stroke(ctx)(x, y, cm.points, COLORS.WHITE_30)
+                            fillText(ctx)(`${tile.id}`, x + 2, y + 6, COLORS.WHITE_30)
+                        })
+                    }
+                })
                 break
             case NODE_TYPE.OBJECT_GROUP:
                 scene.forEachVisibleObject(this.id, (obj) => obj.draw(ctx, scene))
