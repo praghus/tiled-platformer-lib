@@ -89,7 +89,7 @@ export class Scene {
         this.map = data
         this.entities = entities
         this.camera.setBounds(0, 0, data.width * data.tilewidth, data.height * data.tileheight)
-        data.layers.map((layerData) => this.createTmxLayer(layerData))
+        data.layers.map((layerData) => layerData && this.createTmxLayer(layerData))
     }
     
 
