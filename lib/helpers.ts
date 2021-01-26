@@ -1,5 +1,5 @@
 import { Bounds, TmxTileset, StringTMap } from 'tiled-platformer-lib'
-import { Circle, Point, Polygon } from 'lucendi'
+import { Circle, Point, Polygon, Vector } from 'lucendi'
 import { COLORS } from './constants'
 
 export const noop = (): void => {}
@@ -82,7 +82,7 @@ export function stroke (ctx): (x, y, points, color) => void {
         ctx.strokeStyle = color
         ctx.beginPath()
         ctx.moveTo(points[0].x + x, points[0].y + y)
-        points.map((v: SAT.Vector) => ctx.lineTo(x + v.x, y + v.y))
+        points.map((v: Vector) => ctx.lineTo(x + v.x, y + v.y))
         ctx.lineTo(points[0].x + x, points[0].y + y)
         ctx.stroke()
         ctx.restore()

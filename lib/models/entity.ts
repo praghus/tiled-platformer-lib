@@ -1,8 +1,9 @@
-import { Scene, StringTMap, Drawable } from 'tiled-platformer-lib'
-import { Light } from 'lucendi'
-import { COLORS, NODE_TYPE } from '../constants'
 import { Box, Polygon, Response, Vector, testPolygonPolygon } from 'sat'
+import { Light } from 'lucendi'
+import { StringTMap, Drawable } from 'tiled-platformer-lib'
+import { COLORS, NODE_TYPE } from '../constants'
 import { boxOverlap, isValidArray, outline, fillText, stroke, lightMaskDisc, lightMaskRect } from '../helpers'
+import { Scene } from './scene'
 
 export class Entity {
     public id: string
@@ -22,10 +23,10 @@ export class Entity {
     public direction: string
     public bounds: StringTMap<number>
     public properties: StringTMap<any>
-    public force: SAT.Vector = new Vector(0, 0)
-    public expectedPos: SAT.Vector = new Vector(0, 0)
-    public initialPos: SAT.Vector
-    public collisionMask: SAT.Polygon
+    public force: Vector = new Vector(0, 0)
+    public expectedPos: Vector = new Vector(0, 0)
+    public initialPos: Vector
+    public collisionMask: Polygon
     public collisionLayers: number[] = []
     public collided: Entity[] = []
     public energy: number[]
@@ -39,7 +40,7 @@ export class Entity {
     public dead = false
     public visible = true 
 
-    public collide: (obj: Entity, scene: Scene, response: SAT.Response) => void
+    public collide: (obj: Entity, scene: Scene, response: Response) => void
     public kill = () => this.dead = true
     public isActive = (scene: Scene): boolean => this.activated || scene.onScreen(this)
 

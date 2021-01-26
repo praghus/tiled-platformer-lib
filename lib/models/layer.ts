@@ -1,7 +1,8 @@
-import { Scene, TmxLayer, StringTMap } from 'tiled-platformer-lib'
+import { TmxLayer, StringTMap } from 'tiled-platformer-lib'
 import { fillText, isValidArray, stroke } from '../helpers'
 import { COLORS, NODE_TYPE } from '../constants'
 import { Entity } from './entity'
+import { Scene } from './scene'
 
 export class Layer {
     public id: number

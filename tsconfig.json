@@ -30,12 +30,12 @@
         ],
         "typeRoots": [
             "node_modules/@types",
-            "lib/@types"
+            "types"
         ]
     },
     "include": [
         "lib/**/*.ts"
-    ],
+, "types/index.d.ts"    ],
     "exclude": [
         "node_modules/**"
     ],

@@ -24,7 +24,7 @@ export class Tile implements Drawable {
     public then = getPerformance()
     public frameStart = getPerformance()
     public terrain: number[]
-    public collisionMasks: SAT.Polygon[]
+    public collisionMasks: Polygon[]
     public flipV = false;
     public flipH = false;
 
@@ -47,7 +47,7 @@ export class Tile implements Drawable {
     public isOneWay = (): boolean => this.type === TILE_TYPE.ONE_WAY
     public isInvisible = (): boolean => this.type === TILE_TYPE.INVISIBLE
 
-    public overlapTest (polygon: SAT.Polygon): SAT.Response {
+    public overlapTest (polygon: Polygon): Response {
         const response = new Response()
         const hasCollision = this.collisionMasks.some(
             (shape) => testPolygonPolygon(shape, polygon, response)
@@ -56,7 +56,7 @@ export class Tile implements Drawable {
         return hasCollision && response
     }
 
-    public collide (polygon: SAT.Polygon): SAT.Vector {
+    public collide (polygon: Polygon): Vector {
         const overlap = this.overlapTest(polygon)
         let x: number, y: number
         if (overlap) {
@@ -96,7 +96,7 @@ export class Tile implements Drawable {
         else return this.id
     }
 
-    public getCollisionMask (posX = 0, posY = 0): SAT.Polygon[] {
+    public getCollisionMask (posX = 0, posY = 0): Polygon[] {
         const objects = getProperties(this, 'objects')
         return isValidArray(objects)
             ? objects.map(({ shape, x, y, width, height, points }) =>

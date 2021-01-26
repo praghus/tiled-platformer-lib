@@ -1,12 +1,14 @@
-import { Entity, Viewport } from 'tiled-platformer-lib'
 import { Box, Vector } from 'sat'
+
+import { Entity } from './entity'
+import { Viewport } from './viewport'
 
 export class Camera {
     public x: number
     public y: number
-    public bounds: SAT.Box
+    public bounds: Box
     public follow: Entity
-    public focusPoint: SAT.Vector
+    public focusPoint: Vector
 
     constructor (public viewport: Viewport) {
         const { width, height, scale } = viewport
@@ -46,7 +48,7 @@ export class Camera {
             )
     }
 
-    getBounds (): SAT.Box {
+    getBounds (): Box {
         if (!this.bounds) {
             const { width, height } = this.viewport
             this.setBounds(0, 0, width, height)
