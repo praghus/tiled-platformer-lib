@@ -1,0 +1,63 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Sprite = void 0;
+const helpers_1 = require("../helpers");
+class Sprite {
+    constructor(id, image, width, height) {
+        this.id = id;
+        this.image = image;
+        this.width = width;
+        this.height = height;
+        this.animFrame = 0;
+        this.then = helpers_1.getPerformance();
+        this.frameStart = helpers_1.getPerformance();
+        this.flipV = false;
+        this.flipH = false;
+    }
+    animate(animation = this.animation) {
+        this.animFrame = this.animFrame || 0;
+        this.frameStart = helpers_1.getPerformance();
+        if (this.animation !== animation) {
+            this.animation = animation;
+            this.animFrame = 0;
+        }
+        const duration = animation.strip
+            ? animation.strip.duration
+            : helpers_1.isValidArray(animation.frames) && animation.frames[this.animFrame][2];
+        const framesCount = animation.strip
+            ? animation.strip.frames
+            : helpers_1.isValidArray(animation.frames) && animation.frames.length;
+        if (this.frameStart - this.then > duration) {
+            if (this.animFrame <= framesCount && animation.loop) {
+                this.animFrame = helpers_1.normalize(this.animFrame + 1, 0, framesCount);
+            }
+            else if (this.animFrame < framesCount - 1 && !animation.loop) {
+                this.animFrame += 1;
+            }
+            this.then = helpers_1.getPerformance();
+        }
+    }
+    draw(ctx, x, y, scale = 1) {
+        const { image, animation, animFrame, width, height, flipH, flipV } = this;
+        const scaleH = flipH ? -1 : 1; // Set horizontal scale to -1 if flip horizontal
+        const scaleV = flipV ? -1 : 1; // Set verical scale to -1 if flip vertical
+        const FX = flipH ? width * -1 : 0; // Set x position to -100% if flip horizontal 
+        const FY = flipV ? height * -1 : 0; // Set y position to -100% if flip vertical
+        const flip = flipH || flipV;
+        const [x1, y1] = [(x - FX) * scaleH, (y - FY) * scaleV];
+        flip && ctx.scale(scaleH, scaleV);
+        if (animation) {
+            const { frames, strip } = animation;
+            const frame = helpers_1.isValidArray(frames) && frames[animFrame] || [0, 0];
+            const posX = strip ? strip.x + animFrame * animation.width : frame[0];
+            const posY = strip ? strip.y : frame[1];
+            ctx.drawImage(image, posX, posY, animation.width, animation.height, x1, y1, animation.width * scale, animation.height * scale);
+        }
+        else if (image) {
+            ctx.drawImage(image, 0, 0, width, height, x1, y1, width * scale, height * scale);
+        }
+        flip && ctx.scale(scaleH, scaleV);
+    }
+}
+exports.Sprite = Sprite;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3ByaXRlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vLi4vbGliL21vZGVscy9zcHJpdGUudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQ0Esd0NBQW9FO0FBRXBFLE1BQWEsTUFBTTtJQVFmLFlBQ1csRUFBVSxFQUNWLEtBQXVCLEVBQ3ZCLEtBQWEsRUFDYixNQUFjO1FBSGQsT0FBRSxHQUFGLEVBQUUsQ0FBUTtRQUNWLFVBQUssR0FBTCxLQUFLLENBQWtCO1FBQ3ZCLFVBQUssR0FBTCxLQUFLLENBQVE7UUFDYixXQUFNLEdBQU4sTUFBTSxDQUFRO1FBVmxCLGNBQVMsR0FBRyxDQUFDLENBQUE7UUFDYixTQUFJLEdBQUcsd0JBQWMsRUFBRSxDQUFBO1FBQ3ZCLGVBQVUsR0FBRyx3QkFBYyxFQUFFLENBQUE7UUFDN0IsVUFBSyxHQUFHLEtBQUssQ0FBQTtRQUNiLFVBQUssR0FBRyxLQUFLLENBQUE7SUFPakIsQ0FBQztJQUVKLE9BQU8sQ0FBRSxTQUFTLEdBQUcsSUFBSSxDQUFDLFNBQVM7UUFDL0IsSUFBSSxDQUFDLFNBQVMsR0FBRyxJQUFJLENBQUMsU0FBUyxJQUFJLENBQUMsQ0FBQTtRQUNwQyxJQUFJLENBQUMsVUFBVSxHQUFHLHdCQUFjLEVBQUUsQ0FBQTtRQUVsQyxJQUFJLElBQUksQ0FBQyxTQUFTLEtBQUssU0FBUyxFQUFFO1lBQzlCLElBQUksQ0FBQyxTQUFTLEdBQUcsU0FBUyxDQUFBO1lBQzFCLElBQUksQ0FBQyxTQUFTLEdBQUcsQ0FBQyxDQUFBO1NBQ3JCO1FBRUQsTUFBTSxRQUFRLEdBQUcsU0FBUyxDQUFDLEtBQUs7WUFDNUIsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxLQUFLLENBQUMsUUFBUTtZQUMxQixDQUFDLENBQUMsc0JBQVksQ0FBQyxTQUFTLENBQUMsTUFBTSxDQUFDLElBQUksU0FBUyxDQUFDLE1BQU0sQ0FBQyxJQUFJLENBQUMsU0FBUyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUE7UUFFM0UsTUFBTSxXQUFXLEdBQUcsU0FBUyxDQUFDLEtBQUs7WUFDL0IsQ0FBQyxDQUFDLFNBQVMsQ0FBQyxLQUFLLENBQUMsTUFBTTtZQUN4QixDQUFDLENBQUMsc0JBQVksQ0FBQyxTQUFTLENBQUMsTUFBTSxDQUFDLElBQUksU0FBUyxDQUFDLE1BQU0sQ0FBQyxNQUFNLENBQUE7UUFFL0QsSUFBSSxJQUFJLENBQUMsVUFBVSxHQUFHLElBQUksQ0FBQyxJQUFJLEdBQUcsUUFBUSxFQUFFO1lBQ3hDLElBQUksSUFBSSxDQUFDLFNBQVMsSUFBSSxXQUFXLElBQUksU0FBUyxDQUFDLElBQUksRUFBRTtnQkFDakQsSUFBSSxDQUFDLFNBQVMsR0FBRyxtQkFBUyxDQUFDLElBQUksQ0FBQyxTQUFTLEdBQUcsQ0FBQyxFQUFFLENBQUMsRUFBRSxXQUFXLENBQUMsQ0FBQTthQUNqRTtpQkFDSSxJQUFJLElBQUksQ0FBQyxTQUFTLEdBQUcsV0FBVyxHQUFHLENBQUMsSUFBSSxDQUFDLFNBQVMsQ0FBQyxJQUFJLEVBQUU7Z0JBQzFELElBQUksQ0FBQyxTQUFTLElBQUksQ0FBQyxDQUFBO2FBQ3RCO1lBQ0QsSUFBSSxDQUFDLElBQUksR0FBRyx3QkFBYyxFQUFFLENBQUE7U0FDL0I7SUFDTCxDQUFDO0lBRUQsSUFBSSxDQUFFLEdBQTZCLEVBQUUsQ0FBUyxFQUFFLENBQVMsRUFBRSxLQUFLLEdBQUcsQ0FBQztRQUNoRSxNQUFNLEVBQUUsS0FBSyxFQUFFLFNBQVMsRUFBRSxTQUFTLEVBQUUsS0FBSyxFQUFFLE1BQU0sRUFBRSxLQUFLLEVBQUUsS0FBSyxFQUFFLEdBQUcsSUFBSSxDQUFBO1FBQ3pFLE1BQU0sTUFBTSxHQUFHLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQSxDQUFDLGdEQUFnRDtRQUM5RSxNQUFNLE1BQU0sR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUEsQ0FBQywyQ0FBMkM7UUFDekUsTUFBTSxFQUFFLEdBQUcsS0FBSyxDQUFDLENBQUMsQ0FBQyxLQUFLLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQSxDQUFDLDhDQUE4QztRQUNoRixNQUFNLEVBQUUsR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLE1BQU0sR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFBLENBQUMsMkNBQTJDO1FBQzlFLE1BQU0sSUFBSSxHQUFHLEtBQUssSUFBSSxLQUFLLENBQUE7UUFDM0IsTUFBTSxDQUFDLEVBQUUsRUFBRSxFQUFFLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxHQUFHLEVBQUUsQ0FBQyxHQUFHLE1BQU0sRUFBRSxDQUFDLENBQUMsR0FBRyxFQUFFLENBQUMsR0FBRyxNQUFNLENBQUMsQ0FBQTtRQUV2RCxJQUFJLElBQUksR0FBRyxDQUFDLEtBQUssQ0FBQyxNQUFNLEVBQUUsTUFBTSxDQUFDLENBQUE7UUFDakMsSUFBSSxTQUFTLEVBQUU7WUFDWCxNQUFNLEVBQUUsTUFBTSxFQUFFLEtBQUssRUFBRSxHQUFHLFNBQVMsQ0FBQTtZQUNuQyxNQUFNLEtBQUssR0FBRyxzQkFBWSxDQUFDLE1BQU0sQ0FBQyxJQUFJLE1BQU0sQ0FBQyxTQUFTLENBQUMsSUFBSSxDQUFDLENBQUMsRUFBRSxDQUFDLENBQUMsQ0FBQTtZQUNqRSxNQUFNLElBQUksR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLEtBQUssQ0FBQyxDQUFDLEdBQUcsU0FBUyxHQUFHLFNBQVMsQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQTtZQUNyRSxNQUFNLElBQUksR0FBRyxLQUFLLENBQUMsQ0FBQyxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQTtZQUV2QyxHQUFHLENBQUMsU0FBUyxDQUFDLEtBQUssRUFDZixJQUFJLEVBQUUsSUFBSSxFQUFFLFNBQVMsQ0FBQyxLQUFLLEVBQUUsU0FBUyxDQUFDLE1BQU0sRUFDN0MsRUFBRSxFQUFFLEVBQUUsRUFBRSxTQUFTLENBQUMsS0FBSyxHQUFHLEtBQUssRUFBRSxTQUFTLENBQUMsTUFBTSxHQUFHLEtBQUssQ0FDNUQsQ0FBQTtTQUNKO2FBQ0ksSUFBSSxLQUFLLEVBQUU7WUFDWixHQUFHLENBQUMsU0FBUyxDQUFDLEtBQUssRUFDZixDQUFDLEVBQUUsQ0FBQyxFQUFFLEtBQUssRUFBRSxNQUFNLEVBQUUsRUFBRSxFQUFFLEVBQUUsRUFBRSxLQUFLLEdBQUcsS0FBSyxFQUFFLE1BQU0sR0FBRyxLQUFLLENBQzdELENBQUE7U0FDSjtRQUNELElBQUksSUFBSSxHQUFHLENBQUMsS0FBSyxDQUFDLE1BQU0sRUFBRSxNQUFNLENBQUMsQ0FBQTtJQUNyQyxDQUFDO0NBQ0o7QUF2RUQsd0JBdUVDIn0=

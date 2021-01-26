@@ -1,0 +1,16 @@
+{
+  "plugins": [
+    "transform-class-properties",
+    "syntax-decorators",
+    "transform-decorators-legacy"
+  ],
+  "presets": [
+    ["es2015", { "modules": false }],
+    "stage-0"
+  ],
+  "env": {
+    "targets": {
+      "node": "current"
+    }
+  }
+}
