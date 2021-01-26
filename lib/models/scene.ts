@@ -164,6 +164,7 @@ export class Scene {
         }
     }
 
+    // @todo: refactor 
     public forEachVisibleTile (layerId: number, fn: (tile: Tile, x: number, y: number) => void = noop): void {
         const { 
             camera,
