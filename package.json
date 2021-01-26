@@ -2,7 +2,7 @@
   "name": "tiled-platformer-lib",
   "version": "1.8.3",
   "description": "Helper library for tiled platformer games.",
-  "main": "lib/index.ts",
+  "main": "build/index.ts",
   "module": "lib/index.ts",
   "typings": "lib/@types/index.d.ts",
   "repository": "https://github.com/praghus/tiled-platformer-lib.git",
