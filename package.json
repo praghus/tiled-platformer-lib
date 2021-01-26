@@ -1,6 +1,6 @@
 {
   "name": "tiled-platformer-lib",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Helper library for tiled platformer games.",
   "main": "lib/index.ts",
   "module": "lib/index.ts",
