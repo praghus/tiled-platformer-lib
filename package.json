@@ -1,6 +1,6 @@
 {
   "name": "tiled-platformer-lib",
-  "version": "1.8.6",
+  "version": "1.8.7",
   "description": "Helper library for tiled platformer games.",
   "main": "build/main/index.js",
   "module": "build/module/index.js",
@@ -21,26 +21,17 @@
     "build:module": "tsc -p tsconfig.module.json",
     "fix": "run-s fix:*",
     "fix:eslint": "eslint lib/** --fix",
-    "doc": "run-s doc:html && open-cli build/docs/index.html",
-    "doc:html": "typedoc lib/ --exclude **/*.spec.ts --target ES6 --mode file --out build/docs",
-    "doc:json": "typedoc lib/ --exclude **/*.spec.ts --target ES6 --mode file --json build/docs/typedoc.json",
-    "doc:publish": "gh-pages -m \"[ci skip] Updates\" -d build/docs",
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && yarn install --pure-lockfile",
     "test": "echo \"Error: no test specified\" && exit 0",
-    "clean": "trash build",
-    "prepare-release": "run-s reset doc:html version doc:publish"
-
+    "clean": "trash build"
   },
   "scripts-info": {
     "info": "Display information about the package scripts",
     "build": "Clean and rebuild the project",
     "fix": "Try to automatically fix any linting problems",
-    "doc": "Generate HTML API documentation and open it in a browser",
-    "doc:json": "Generate API documentation in typedoc JSON format",
     "version": "Bump package.json version, update CHANGELOG.md, tag release",
-    "reset": "Delete all untracked files and reset the repo to the last commit",
-    "prepare-release": "One-step: clean, build, publish docs, and prep a release"
+    "reset": "Delete all untracked files and reset the repo to the last commit"
   },
   "engines": {
     "node": ">=12.16.0"
