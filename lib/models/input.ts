@@ -1,5 +1,3 @@
-import { StringTMap } from 'tiled-platformer-lib'
-
 export class Input {
     public states: StringTMap<any>
 

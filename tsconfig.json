@@ -1,19 +1,11 @@
 {
     "compilerOptions": {
-        "target": "es6",
         "outDir": "build/main",
         "rootDir": "lib",
         "moduleResolution": "node",
         "module": "commonjs",
-        "declaration": false,
-        "inlineSourceMap": true,
-        "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
-        
-        /* Additional Checks */
-        "noUnusedLocals": true,
-        "noUnusedParameters": true ,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
+        "target": "es6",
+        "sourceMap": false,
         
         /* Debugging Options */
         "traceResolution": false,
@@ -34,8 +26,9 @@
         ]
     },
     "include": [
-        "lib/**/*.ts"
-, "types/index.d.ts"    ],
+        "lib/**/*.ts", 
+        "types/index.d.ts"    
+    ],
     "exclude": [
         "node_modules/**"
     ],

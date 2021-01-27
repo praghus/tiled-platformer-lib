@@ -16,4 +16,3 @@ var tile_1 = require("./models/tile");
 Object.defineProperty(exports, "Tile", { enumerable: true, get: function () { return tile_1.Tile; } });
 var viewport_1 = require("./models/viewport");
 Object.defineProperty(exports, "Viewport", { enumerable: true, get: function () { return viewport_1.Viewport; } });
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9saWIvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSwwQ0FBd0M7QUFBL0IsZ0dBQUEsTUFBTSxPQUFBO0FBQ2YsMENBQXdDO0FBQS9CLGdHQUFBLE1BQU0sT0FBQTtBQUNmLHdDQUFzQztBQUE3Qiw4RkFBQSxLQUFLLE9BQUE7QUFDZCx3Q0FBc0M7QUFBN0IsOEZBQUEsS0FBSyxPQUFBO0FBQ2Qsd0NBQXNDO0FBQTdCLDhGQUFBLEtBQUssT0FBQTtBQUNkLDBDQUF3QztBQUEvQixnR0FBQSxNQUFNLE9BQUE7QUFDZixzQ0FBb0M7QUFBM0IsNEZBQUEsSUFBSSxPQUFBO0FBQ2IsOENBQTRDO0FBQW5DLG9HQUFBLFFBQVEsT0FBQSJ9

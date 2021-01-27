@@ -1,18 +1,13 @@
-/// <reference types="@types/sat" />
+/// <reference types="node" />
 
-declare namespace TPL {
-    export interface StringTMap<T> {
-        [key: string]: T;
-    }
+interface StringTMap<T> { [key: string]: T }
+interface NumberTMap<T> { [key: number]: T }
+interface Constructable<T> { new(...args: any[]): T }
 
-    export interface NumberTMap<T> {
-        [key: number]: T;
-    }
+declare module 'tiled-platformer-lib' {
 
-    export interface Constructable<T> {
-        new(...args: any[]): T;
-    }
-
+    import { Box, Polygon, Response, Vector } from 'sat'
+    
     export interface Drawable {
         animation?: Animation;
         animFrame: number;
@@ -119,7 +114,7 @@ declare namespace TPL {
         loop: boolean;
     }
 
-// Classes
+    // Models
     export class Viewport {
         width: number;
         height: number;
@@ -143,14 +138,14 @@ declare namespace TPL {
     export class Camera {
         x: number;
         y: number;
-        bounds: SAT.Box;
+        bounds: Box;
         follow: Entity;
-        focusPoint: SAT.Vector;
+        focusPoint: Vector;
 
         constructor(viewport: Viewport); 
 
         center(): void;
-        getBounds(): SAT.Box;
+        getBounds(): Box;
         moveTo(x: number, y: number): void;
         resize(viewport: Viewport): void;
         setBounds(x: number, y: number, w: number, h: number): void;
@@ -171,7 +166,7 @@ declare namespace TPL {
         then: number;
         frameStart: number;
         terrain: number[];
-        collisionMasks: SAT.Polygon[];
+        collisionMasks: Polygon[];
 
         constructor (
             id: number, 
@@ -179,10 +174,10 @@ declare namespace TPL {
             tileset: TmxTileset
         );
 
-        collide (polygon: SAT.Polygon): SAT.Vector;
+        collide (polygon: Polygon): Vector;
         draw(ctx: CanvasRenderingContext2D, x: number, y: number, scale?: number): void;
         getBounds(x: number, y: number): Bounds;
-        getCollisionMask(posX: number, posY: number): SAT.Polygon[];
+        getCollisionMask(posX: number, posY: number): Polygon[];
         getNextGid(): number;
         getTerrain(): number[];
         isCutomShape(): boolean;
@@ -190,7 +185,7 @@ declare namespace TPL {
         isSolid(): boolean;
         isOneWay(): boolean;
         isInvisible(): boolean;
-        overlapTest(polygon: SAT.Polygon): any 
+        overlapTest(polygon: Polygon): any 
     }
 
     export class Sprite {
@@ -230,10 +225,10 @@ declare namespace TPL {
         direction: string;
         bounds: StringTMap<number>;
         properties: StringTMap<any>;
-        force: SAT.Vector;
-        expectedPos: SAT.Vector;
-        initialPos: SAT.Vector;
-        collisionMask: SAT.Polygon;
+        force: Vector;
+        expectedPos: Vector;
+        initialPos: Vector;
+        collisionMask: Polygon;
         collisionLayers: number[];
         energy: number[];
         collided: Entity[];
@@ -249,7 +244,7 @@ declare namespace TPL {
 
         constructor (obj: StringTMap<any>);
 
-        collide(obj: Entity, scene: Scene, response: SAT.Response): void;
+        collide(obj: Entity, scene: Scene, response: Response): void;
         draw(ctx: CanvasRenderingContext2D, scene: Scene): void;
         getTranslatedBounds(x: number, y: number): any;
         addLightSource (color: string, distance: number, radius: number): any;
@@ -345,8 +340,5 @@ declare namespace TPL {
         startTimeout(name: string, duration: number, fn?: () => void): void;
         stopTimeout(name: string): void;
     }
-}
 
-declare module 'tiled-platformer-lib' {
-	export = TPL;
 }

@@ -1,4 +1,4 @@
-import { Bounds, TmxTileset, StringTMap } from 'tiled-platformer-lib'
+import { Bounds, TmxTileset } from 'tiled-platformer-lib'
 import { Circle, Point, Polygon, Vector } from 'lucendi'
 import { COLORS } from './constants'
 

@@ -1,4 +1,4 @@
-import { TmxLayer, StringTMap } from 'tiled-platformer-lib'
+import { TmxLayer } from 'tiled-platformer-lib'
 import { fillText, isValidArray, stroke } from '../helpers'
 import { COLORS, NODE_TYPE } from '../constants'
 import { Entity } from './entity'

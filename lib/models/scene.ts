@@ -1,6 +1,6 @@
 
 import { getFilename, isValidArray, noop, fillText } from '../helpers'
-import { TmxMap, Constructable, TmxObject, TmxTileset, StringTMap, TmxLayer } from 'tiled-platformer-lib'
+import { TmxMap, TmxObject, TmxTileset, TmxLayer } from 'tiled-platformer-lib'
 import { Camera, Entity, Input, Layer, Sprite, Tile, Viewport } from '../index'
 import { COLORS } from '../constants'
 

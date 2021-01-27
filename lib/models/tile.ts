@@ -1,4 +1,4 @@
-import { Bounds, Drawable, TmxTileset, StringTMap } from 'tiled-platformer-lib'
+import { Bounds, Drawable, TmxTileset } from 'tiled-platformer-lib'
 import { TILE_TYPE } from '../constants'
 import {
     testPolygonPolygon,

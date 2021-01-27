@@ -1,6 +1,6 @@
 import { Box, Polygon, Response, Vector, testPolygonPolygon } from 'sat'
 import { Light } from 'lucendi'
-import { StringTMap, Drawable } from 'tiled-platformer-lib'
+import { Drawable } from 'tiled-platformer-lib'
 import { COLORS, NODE_TYPE } from '../constants'
 import { boxOverlap, isValidArray, outline, fillText, stroke, lightMaskDisc, lightMaskRect } from '../helpers'
 import { Scene } from './scene'
