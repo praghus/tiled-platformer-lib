@@ -1,6 +1,6 @@
 {
   "name": "tiled-platformer-lib",
-  "version": "1.8.7",
+  "version": "1.8.9",
   "description": "Helper library for tiled platformer games.",
   "main": "build/main/index.js",
   "module": "build/module/index.js",
