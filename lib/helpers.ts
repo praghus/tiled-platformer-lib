@@ -1,6 +1,6 @@
-import { Bounds, TmxTileset } from 'tiled-platformer-lib'
+import { Bounds, TmxTileset, StringTMap } from './types'
 import { Circle, Point, Polygon, Vector } from 'lucendi'
-import { COLORS } from './constants'
+import { COLORS } from './enums'
 
 export const noop = (): void => {}
 

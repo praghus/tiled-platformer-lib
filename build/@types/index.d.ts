@@ -6,4 +6,5 @@ export { Scene } from './components/scene';
 export { Sprite } from './components/sprite';
 export { Tile } from './components/tile';
 export { Viewport } from './components/viewport';
-//# sourceMappingURL=index.js.map
+export { Animation, AnimationStrip } from './types';
+//# sourceMappingURL=index.d.ts.map

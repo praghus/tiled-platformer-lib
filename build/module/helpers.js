@@ -1,5 +1,5 @@
 import { Circle, Point, Polygon } from 'lucendi';
-import { COLORS } from './constants';
+import { COLORS } from './enums';
 export const noop = () => { };
 export const random = (min, max) => min + (Math.random() * (max - min));
 export const randomInt = (min, max) => Math.round(random(min, max));
@@ -83,3 +83,4 @@ export function lightMaskRect(x, y, points) {
 export function lightMaskDisc(x, y, radius) {
     return new Circle(new Point(x + radius, y + radius), radius);
 }
+//# sourceMappingURL=helpers.js.map

@@ -5,14 +5,16 @@
         "moduleResolution": "node",
         "module": "commonjs",
         "target": "es6",
-        "sourceMap": false,
-        
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "composite": true,
+        "declarationDir": "./build/@types",
         /* Debugging Options */
         "traceResolution": false,
         "listEmittedFiles": false,
         "listFiles": false,
         "pretty": true,
-        
         "lib": [
             "es2018",
             "dom"
@@ -21,13 +23,11 @@
             "node"
         ],
         "typeRoots": [
-            "node_modules/@types",
-            "types"
+            "node_modules/@types"
         ]
     },
     "include": [
-        "lib/**/*.ts", 
-        "types/index.d.ts"    
+        "lib/**/*.ts"
     ],
     "exclude": [
         "node_modules/**"
